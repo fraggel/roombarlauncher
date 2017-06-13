@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="es.tfandroid.roombarlauncher"><!-- android:sharedUserId="android.uid.system" coreApp="true">-->
+    package="es.tfandroid.roombarlauncher" android:sharedUserId="android.uid.system" coreApp="true">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
@@ -29,7 +29,7 @@
         android:icon="@mipmap/ic_launcher"
         android:screenOrientation="portrait"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/FullscreenTheme">
         <activity
             android:name=".InicioActivity"
             android:label="@string/app_name"

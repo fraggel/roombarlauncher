@@ -51,12 +51,14 @@ public class FullscreenActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         try {
-
             super.onCreate(savedInstanceState);
-            setContentView(R.layout.activity_fullscreen);
             actionBar = getSupportActionBar();
             actionBar.setTitle("");
             actionBar.hide();
+            /*View decorWiew =getWindow().getDecorView();
+            int uiOptions=View.SYSTEM_UI_FLAG_FULLSCREEN;
+            decorWiew.setSystemUiVisibility(uiOptions);*/
+            setContentView(R.layout.activity_fullscreen);
             while(!comprobarConexion("http://www.roombar.com/App-RoomBar/01/")){}
             String buildprop = "";
             FileInputStream fis = new FileInputStream(new File("/system/build.prop"));
@@ -194,19 +196,23 @@ public class FullscreenActivity extends AppCompatActivity {
         // are available.
         //delayedHide(10);
     }
-    /*@Override
+    @Override
     public void onResume(){
-
+       /* View decorWiew =getWindow().getDecorView();
+        int uiOptions=View.SYSTEM_UI_FLAG_FULLSCREEN;
+        decorWiew.setSystemUiVisibility(uiOptions);*/
         if(webview!=null){
             webview.reload();
             webview.loadUrl(webview.getUrl());
         }
         super.onResume();
     }
-*/
+
     @Override
     public void onSaveInstanceState(Bundle outState){
-
+        /*View decorWiew =getWindow().getDecorView();
+        int uiOptions=View.SYSTEM_UI_FLAG_FULLSCREEN;
+        decorWiew.setSystemUiVisibility(uiOptions);*/
         if(webview!=null){
             webview.reload();
             webview.loadUrl(webview.getUrl());

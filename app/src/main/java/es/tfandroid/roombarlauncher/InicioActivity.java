@@ -19,6 +19,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Toast;
@@ -32,8 +33,10 @@ public class InicioActivity extends AppCompatActivity implements AsyncResponse{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_inicio);
-        preventStatusBarExpansion(this);
+        /*View decorWiew =getWindow().getDecorView();
+        int uiOptions=View.SYSTEM_UI_FLAG_FULLSCREEN;
+        decorWiew.setSystemUiVisibility(uiOptions);*/
+
         ActionBar actionBar = null;
         URL url = null;
         try {
@@ -45,6 +48,9 @@ public class InicioActivity extends AppCompatActivity implements AsyncResponse{
         actionBar = getSupportActionBar();
         actionBar.setTitle("");
         actionBar.hide();
+        preventStatusBarExpansion(this);
+        setContentView(R.layout.activity_inicio);
+
         VersionThread asyncTask = new VersionThread();
         asyncTask.delegate = this;
         asyncTask.execute();
@@ -97,6 +103,9 @@ public class InicioActivity extends AppCompatActivity implements AsyncResponse{
     }
     @Override
     public void onResume(){
+        /*View decorWiew =getWindow().getDecorView();
+        int uiOptions=View.SYSTEM_UI_FLAG_FULLSCREEN;
+        decorWiew.setSystemUiVisibility(uiOptions);*/
         if(!comprobarConexion("http://www.roombar.com/App-RoomBar/01/")){
 
         }else {
@@ -110,7 +119,9 @@ public class InicioActivity extends AppCompatActivity implements AsyncResponse{
 
     @Override
     public void onSaveInstanceState(Bundle outState){
-
+        /*View decorWiew =getWindow().getDecorView();
+        int uiOptions=View.SYSTEM_UI_FLAG_FULLSCREEN;
+        decorWiew.setSystemUiVisibility(uiOptions);*/
         super.onSaveInstanceState(outState);
     }
     @Override
