@@ -1,47 +1,29 @@
 package es.tfandroid.roombarlauncher;
 
-import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Color;
-import android.graphics.PixelFormat;
-import android.graphics.drawable.ColorDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
-import android.os.Build;
+import android.os.Bundle;
 import android.os.Environment;
 import android.os.StrictMode;
 import android.provider.Settings;
-import android.os.Bundle;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.TelephonyManager;
-import android.util.Log;
-import android.view.Gravity;
 import android.view.KeyEvent;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.WindowManager;
+import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
@@ -73,7 +55,8 @@ public class FullscreenActivity extends AppCompatActivity {
             super.onCreate(savedInstanceState);
             setContentView(R.layout.activity_fullscreen);
             actionBar = getSupportActionBar();
-
+            actionBar.setTitle("");
+            actionBar.hide();
             while(!comprobarConexion("http://www.roombar.com/App-RoomBar/01/")){}
             String buildprop = "";
             FileInputStream fis = new FileInputStream(new File("/system/build.prop"));
@@ -101,21 +84,28 @@ public class FullscreenActivity extends AppCompatActivity {
 
                 webview.loadUrl("http://www.roombar.com/App-RoomBar/01/");
                 webview.setWebViewClient(new JiayuWebViewClient());
-                webview.getSettings().setSupportZoom(true);
+                webview.getSettings().setSupportZoom(false);
+                webview.setWebChromeClient(new ChromeWebViewClient());
                 webview.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
+                webview.getSettings().setBuiltInZoomControls(false);
                 webview.getSettings().setUserAgentString("Android");
                 webview.getSettings().setJavaScriptEnabled(true);
-                webview.getSettings().setLoadWithOverviewMode(true);
+                webview.getSettings().setLoadWithOverviewMode(false);
+                webview.getSettings().setLightTouchEnabled(true);
                 webview.getSettings().setUseWideViewPort(true);
                 webview.getSettings().setAppCacheMaxSize(1024 * 1024 * 1024);
                 webview.getSettings().setAppCachePath(this.getCacheDir().getAbsolutePath());
                 webview.getSettings().setAppCacheEnabled(true);
                 webview.getSettings().setBlockNetworkImage(false);
+                webview.getSettings().setBlockNetworkLoads(false);
+                webview.getSettings().setEnableSmoothTransition(false);
+                webview.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
+                webview.getSettings().setLoadsImagesAutomatically(true);
                 webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
 
 
                 //LayoutParams lp = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, Gravity.RIGHT | Gravity.CENTER_VERTICAL);
-                View customNav = LayoutInflater.from(this.getApplicationContext()).inflate(R.layout.statusbar, null); // layout which contains your button.
+                /*View customNav = LayoutInflater.from(this.getApplicationContext()).inflate(R.layout.statusbar, null); // layout which contains your button.
                 actionBar.setCustomView(customNav);
                 actionBar.setDisplayShowCustomEnabled(true);
                 actionBar.setTitle("");
@@ -135,7 +125,7 @@ public class FullscreenActivity extends AppCompatActivity {
                         builder.create();
                         builder.show();
                     }
-                });
+                });*/
                 this.registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
                 this.registerReceiver(this.mTime, new IntentFilter(Intent.ACTION_TIME_TICK));
                 this.registerReceiver(this.mBt, new IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED));
@@ -145,10 +135,10 @@ public class FullscreenActivity extends AppCompatActivity {
                 this.registerReceiver(this.mWifi, new IntentFilter(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION));
                 this.registerReceiver(this.mNetworkStateReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
                 if (isConnectedViaWifi()) {
-                    ((TextView) findViewById(R.id.batteryLevel)).setText("Wifi Activo");
+                    //((TextView) findViewById(R.id.batteryLevel)).setText("Wifi Activo");
                 }
                 if (isConnectedBt()) {
-                    ((TextView) findViewById(R.id.date)).setText("BT Activo");
+                    //((TextView) findViewById(R.id.date)).setText("BT Activo");
                 }
 
         } catch (Exception e) {
@@ -248,8 +238,8 @@ public class FullscreenActivity extends AppCompatActivity {
                 } else {
                     actionBar.setBackgroundDrawable(new ColorDrawable(Color.BLUE));
                 }*/
-                ((TextView) findViewById(R.id.batteryLevel)).setText(level + "%");
-                ((TextView) findViewById(R.id.date)).setText(asignaHoras());
+                //((TextView) findViewById(R.id.batteryLevel)).setText(level + "%");
+                //((TextView) findViewById(R.id.date)).setText(asignaHoras());
             } catch (Exception e) {
                 try {
                     PrintWriter bw = new PrintWriter(new FileWriter(Environment.getExternalStorageDirectory() + "/log.app"), true);
@@ -265,7 +255,7 @@ public class FullscreenActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context ctxt, Intent intent) {
             try {
-                ((TextView) findViewById(R.id.date)).setText(asignaHoras());
+                //((TextView) findViewById(R.id.date)).setText(asignaHoras());
             } catch (Exception e) {
                 try {
                     PrintWriter bw = new PrintWriter(new FileWriter(Environment.getExternalStorageDirectory() + "/log.app"));
@@ -302,16 +292,16 @@ public class FullscreenActivity extends AppCompatActivity {
                         BluetoothAdapter.ERROR);
                 switch (state) {
                     case BluetoothAdapter.STATE_OFF:
-                        ((TextView)findViewById(R.id.date)).setText("Bluetooth off");
+                        //((TextView)findViewById(R.id.date)).setText("Bluetooth off");
                         break;
                     case BluetoothAdapter.STATE_TURNING_OFF:
-                        ((TextView)findViewById(R.id.date)).setText("Turning Bluetooth off...");
+                        //((TextView)findViewById(R.id.date)).setText("Turning Bluetooth off...");
                         break;
                     case BluetoothAdapter.STATE_ON:
-                        ((TextView)findViewById(R.id.date)).setText("Bluetooth on");
+                        //((TextView)findViewById(R.id.date)).setText("Bluetooth on");
                         break;
                     case BluetoothAdapter.STATE_TURNING_ON:
-                        ((TextView)findViewById(R.id.date)).setText("Turning Bluetooth on...");
+                        //((TextView)findViewById(R.id.date)).setText("Turning Bluetooth on...");
                         break;
                 }
             }
@@ -329,40 +319,17 @@ public class FullscreenActivity extends AppCompatActivity {
                     WifiInfo wifiInfo = wifiMgr.getConnectionInfo();
 
                     if( wifiInfo.getNetworkId() == -1 ){
-                        ((TextView)findViewById(R.id.batteryLevel)).setText("Wifi not connected");
+                        //((TextView)findViewById(R.id.batteryLevel)).setText("Wifi not connected");
                     }
-                    ((TextView)findViewById(R.id.batteryLevel)).setText("Wifi on");
+                    //((TextView)findViewById(R.id.batteryLevel)).setText("Wifi on");
                 }
                 else {
-                    ((TextView)findViewById(R.id.batteryLevel)).setText("Wifi off");
+                    //((TextView)findViewById(R.id.batteryLevel)).setText("Wifi off");
                 }
             }
         }
     };
 
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.configuracion:
-                Intent i = new Intent(this, SettingsActivity.class);
-                this.startActivity(i);
-                return true;
-            case R.id.help:
-                Intent i2 = new Intent(this, SettingsActivity.class);
-                this.startActivity(i2);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
 
     @Override
     public void onBackPressed() {
@@ -433,12 +400,19 @@ public class FullscreenActivity extends AppCompatActivity {
 
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
             String urlDestino = url;
-            if(!comprobarConexion(urlDestino)){
-                Toast.makeText(getApplicationContext(),"No existe la web",Toast.LENGTH_LONG).show();
+            if("http://www.roombar.com/App-RoomBar/01/06/01/".equals(url)){
+                Intent settings = new Intent(Settings.ACTION_SETTINGS);
+                startActivity(settings);
                 return true;
-                //view.goBack();
             }else {
-                return false;
+                if (!comprobarConexion(urlDestino)) {
+                    Toast.makeText(getApplicationContext(), "No existe la web", Toast.LENGTH_LONG).show();
+                    return true;
+                    //view.goBack();
+                } else {
+                    return false;
+
+                }
             }
         }
 
@@ -448,7 +422,19 @@ public class FullscreenActivity extends AppCompatActivity {
             System.exit(0);
         }
     }
+    private class ChromeWebViewClient extends WebChromeClient {
 
+        public boolean shouldOverrideUrlLoading(WebView view, String url) {
+            String urlDestino = url;
+            if(!comprobarConexion(urlDestino)){
+                Toast.makeText(getApplicationContext(),"No existe la web",Toast.LENGTH_LONG).show();
+                return true;
+                //view.goBack();
+            }else {
+                return false;
+            }
+        }
+    }
 
 
     public boolean comprobarConexion(String urlString) {
@@ -480,6 +466,15 @@ public class FullscreenActivity extends AppCompatActivity {
             }
         }catch(Exception e1){}
         return retorno;
+    }
+
+    public boolean onKeyUp(int keyCode,KeyEvent event){
+        if(keyCode==KeyEvent.KEYCODE_MENU){
+            webview.loadUrl("http://www.roombar.com/App-RoomBar/01/06/02/");
+            return true;
+        } else {
+            return super.onKeyUp(keyCode, event);
+        }
     }
 }
 

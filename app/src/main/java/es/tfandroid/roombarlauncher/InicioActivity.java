@@ -1,8 +1,6 @@
 package es.tfandroid.roombarlauncher;
 
 import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -12,28 +10,20 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.os.BatteryManager;
-import android.os.Environment;
+import android.os.Bundle;
 import android.os.StrictMode;
 import android.provider.Settings;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.FileWriter;
-import java.io.PrintWriter;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 
 public class InicioActivity extends AppCompatActivity implements AsyncResponse{
@@ -53,7 +43,8 @@ public class InicioActivity extends AppCompatActivity implements AsyncResponse{
 
         }
         actionBar = getSupportActionBar();
-        actionBar.setTitle("RoomBar");
+        actionBar.setTitle("");
+        actionBar.hide();
         VersionThread asyncTask = new VersionThread();
         asyncTask.delegate = this;
         asyncTask.execute();
@@ -97,6 +88,13 @@ public class InicioActivity extends AppCompatActivity implements AsyncResponse{
             }
         }
     };
+    public boolean onKeyUp(int keyCode,KeyEvent event){
+        if(keyCode==KeyEvent.KEYCODE_MENU){
+            return true;
+        }else {
+            return super.onKeyUp(keyCode, event);
+        }
+    }
     @Override
     public void onResume(){
         if(!comprobarConexion("http://www.roombar.com/App-RoomBar/01/")){
@@ -123,12 +121,6 @@ public class InicioActivity extends AppCompatActivity implements AsyncResponse{
         }
     }
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu, menu);
-        return true;
-    }
-    @Override
     protected void onDestroy() {
         try{
             unregisterReceiver(this.mWifi);
@@ -141,21 +133,7 @@ public class InicioActivity extends AppCompatActivity implements AsyncResponse{
         }
         super.onDestroy();
     }
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.configuracion:
-                Intent i = new Intent(this, SettingsActivity.class);
-                this.startActivity(i);
-                return true;
-            case R.id.help:
-                Intent i2 = new Intent(this, SettingsActivity.class);
-                this.startActivity(i2);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
+
     public boolean comprobarConexion(String urlString) {
         boolean retorno=false;
         try {
@@ -217,7 +195,9 @@ public class InicioActivity extends AppCompatActivity implements AsyncResponse{
             customViewGroup view = new customViewGroup(context);
 
             manager.addView(view, localLayoutParams);
-        }catch(Exception e){}
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
 
     public static class customViewGroup extends ViewGroup {
