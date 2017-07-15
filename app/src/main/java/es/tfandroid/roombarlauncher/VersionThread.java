@@ -12,7 +12,7 @@ public class VersionThread extends AsyncTask<String, Void, String> {
     protected String doInBackground(String... params) {
         String retorno="";
         try {
-            URL url = new URL("http://www.roombar.com/App-RoomBar/01/");
+            URL url = new URL("http://localhost:8080/");
             HttpURLConnection http = null;
             int statusCode=0;
             while(statusCode!=200) {
