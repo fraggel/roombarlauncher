@@ -87,10 +87,8 @@ public class FullscreenActivity extends AppCompatActivity {
     ActionBar actionBar = null;
     View mContentView;
     File newfilePicture =null;
-    public static final int OVERLAY_PERMISSION_REQ_CODE = 4545;
     public static String urlSaved=null;
-    public static String testUrl="http://localhost:8080/";
-    protected FullscreenActivity.customViewGroup blockingView = null;
+    public static String testUrl="http://localhost:8080/index.php";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         try {
@@ -99,8 +97,8 @@ public class FullscreenActivity extends AppCompatActivity {
             actionBar = getSupportActionBar();
             actionBar.setTitle("");
             actionBar.hide();
-            preventStatusBarExpansion(this);
-            setMobileDataState(true);
+
+
             //while(!comprobarConexion(testUrl)){}
             String buildprop = "";
 
@@ -128,40 +126,9 @@ public class FullscreenActivity extends AppCompatActivity {
                 webview.getSettings().setEnableSmoothTransition(false);
                 webview.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
                 webview.getSettings().setLoadsImagesAutomatically(true);
-                /*if(!comprobarConexion(testUrl)){
-                    if(!new File(this.getCacheDir().getAbsolutePath()).exists()){
-                        Intent intent = new Intent(getApplicationContext(), InicioActivity.class);
-                        startActivity(intent);
-                    }else {
-                        webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ONLY);
-                    }
-                }else{
-                    webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
-                }*/
-            webview.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
 
-                //LayoutParams lp = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, Gravity.RIGHT | Gravity.CENTER_VERTICAL);
-                /*View customNav = LayoutInflater.from(this.getApplicationContext()).inflate(R.layout.statusbar, null); // layout which contains your button.
-                actionBar.setCustomView(customNav);
-                actionBar.setDisplayShowCustomEnabled(true);
-                actionBar.setTitle("");
-                ((TextView) customNav.findViewById(R.id.date)).setText(asignaHoras());
-                TextView tx = (TextView) findViewById(R.id.date);
-                tx.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(getApplicationContext(), R.style.MyCustomDialogTheme);
-                        builder.setMessage(asignaFechaCompleta())
-                                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int id) {
+                webview.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
 
-                                    }
-                                });
-                        // Create the AlertDialog object and return it
-                        builder.create();
-                        builder.show();
-                    }
-                });*/
                 this.registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
                 this.registerReceiver(this.mTime, new IntentFilter(Intent.ACTION_TIME_TICK));
                 this.registerReceiver(this.mBt, new IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED));
@@ -172,95 +139,23 @@ public class FullscreenActivity extends AppCompatActivity {
                 this.registerReceiver(this.mNetworkStateReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
                 this.registerReceiver(this.mHome, new IntentFilter(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
 
-                /*if (isConnectedViaWifi()) {
-                    //((TextView) findViewById(R.id.batteryLevel)).setText("Wifi Activo");
-                }
-                if (isConnectedBt()) {
-                    //((TextView) findViewById(R.id.date)).setText("BT Activo");
-                }*/
-
         } catch (Exception e) {
             Intent intent = new Intent(getApplicationContext(), FullscreenActivity.class);
             startActivity(intent);
 
         }
-        /*if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-
-            if (!Settings.canDrawOverlays(this)) {
-                Toast.makeText(this, "Please give my app this permission!", Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
-                startActivityForResult(intent, OVERLAY_PERMISSION_REQ_CODE);
-            } else {
-                disableStatusBar();
-            }
-        }
-        else {*/
-            //disableStatusBar();
-        //}
     }
-    /*private boolean isConnectedViaWifi() {
-        WifiManager wifiMgr = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 
-        if (wifiMgr.isWifiEnabled()) { // Wi-Fi adapter is ON
 
-            WifiInfo wifiInfo = wifiMgr.getConnectionInfo();
-
-            if( wifiInfo.getNetworkId() == -1 ){
-                return false; // Not connected to an access point
-            }
-            return true; // Connected to an access point
-        }
-        else {
-            return false; // Wi-Fi adapter is OFF
-        }
-    }
-    private boolean isConnectedBt() {
-        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        return mBluetoothAdapter.isEnabled();
-    }*/
-    public void setMobileDataState(boolean mobileDataEnabled)
-    {
-        try
-        {
-            TelephonyManager telephonyService = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-
-            Method setMobileDataEnabledMethod = telephonyService.getClass().getDeclaredMethod("setDataEnabled", boolean.class);
-
-            if (null != setMobileDataEnabledMethod)
-            {
-                setMobileDataEnabledMethod.invoke(telephonyService, mobileDataEnabled);
-            }
-        }
-        catch (Exception ex)
-        {
-            ex.printStackTrace();
-        }
-    }
 
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
 
-        // Trigger the initial hide() shortly after the activity has been
-        // created, to briefly hint to the user that UI controls
-        // are available.
-        //delayedHide(10);
     }
     @Override
     public void onResume(){
-       /* View decorWiew =getWindow().getDecorView();
-        int uiOptions=View.SYSTEM_UI_FLAG_FULLSCREEN;
-        decorWiew.setSystemUiVisibility(uiOptions);*/
-        /*if(webview!=null){
-            webview.reload();
-            webview.loadUrl(webview.getUrl());
-            if(!comprobarConexion(testUrl)){
-                webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ONLY);
-            }else{
-                webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
-            }
-        }*/
-        //webview.loadUrl(urlSaved);
+
         super.onResume();
         this.registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         this.registerReceiver(this.mTime, new IntentFilter(Intent.ACTION_TIME_TICK));
@@ -276,32 +171,13 @@ public class FullscreenActivity extends AppCompatActivity {
 
     @Override
     public void onSaveInstanceState(Bundle outState){
-        /*View decorWiew =getWindow().getDecorView();
-        int uiOptions=View.SYSTEM_UI_FLAG_FULLSCREEN;
-        decorWiew.setSystemUiVisibility(uiOptions);*/
-        /*if(webview!=null){
-            webview.reload();
-            webview.loadUrl(webview.getUrl());
-            if(!comprobarConexion(testUrl)){
-                webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ONLY);
-            }else{
-                webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
-            }
-        }*/
-        //webview.loadUrl(urlSaved);
+
         super.onSaveInstanceState(outState);
     }
     private BroadcastReceiver mNetworkStateReceiver =new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            /*if (intent.getExtras() != null) {
-                if (comprobarConexion(testUrl)) {
-                    if(webview!=null) {
-                        webview.loadUrl(webview.getUrl());
-                        webview.reload();
-                    }
-                }
-            }*/
+
         }
     };
     private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver() {
@@ -310,14 +186,6 @@ public class FullscreenActivity extends AppCompatActivity {
             try {
                 int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
 
-                //LayoutParams lp = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, Gravity.RIGHT | Gravity.CENTER_VERTICAL);
-                /*if (level <= 15) {
-                    actionBar.setBackgroundDrawable(new ColorDrawable(Color.RED));
-                } else {
-                    actionBar.setBackgroundDrawable(new ColorDrawable(Color.BLUE));
-                }*/
-                //((TextView) findViewById(R.id.batteryLevel)).setText(level + "%");
-                //((TextView) findViewById(R.id.date)).setText(asignaHoras());
             } catch (Exception e) {
                 try {
                     PrintWriter bw = new PrintWriter(new FileWriter(Environment.getExternalStorageDirectory() + "/log.app"), true);
@@ -418,23 +286,21 @@ public class FullscreenActivity extends AppCompatActivity {
         }
     };
 
-
     @Override
     public void onBackPressed() {
     try {
         if (webview != null) {
-            if (!comprobarConexion(testUrl)) {
-                webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ONLY);
-            } else {
-                webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
-            }
+
             if (webview.canGoBack()) {
                 webview.goBack();
             } else {
                 if (webview.getUrl().equals(testUrl)) {
-
+                    if(!Utilidades.comprobarConexion(testUrl,getApplicationContext())){
+                        Intent intent = new Intent(getApplicationContext(), InicioActivity.class);
+                        startActivity(intent);
+                    }
                 } else {
-                    Intent intent = new Intent(getApplicationContext(), FullscreenActivity.class);
+                    Intent intent = new Intent(getApplicationContext(), InicioActivity.class);
                     startActivity(intent);
                 }
 
@@ -482,15 +348,6 @@ public class FullscreenActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode,Intent data){
         super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == OVERLAY_PERMISSION_REQ_CODE) {
-            if (!Settings.canDrawOverlays(this)) {
-                Toast.makeText(this, "User can access system settings without this permission!", Toast.LENGTH_SHORT).show();
-            }
-            else
-            { disableStatusBar();
-            }
-        }
         if(newfilePicture!=null){
             sendMail("fraggelillo666@gmail.com", "Prueba", "Adjuntamos imagen",newfilePicture.getAbsolutePath());
         }
@@ -501,18 +358,13 @@ public class FullscreenActivity extends AppCompatActivity {
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
             boolean retorno=false;
             try {
-                if (!comprobarConexion(testUrl)) {
-                    webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ONLY);
-                } else {
-                    webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
-                }
                 String urlDestino = url;//.getUrl().toString();
-                if ("http://www.roombar.com/App-RoomBar/01/06/01/".equals(urlDestino)) {
+                if ("http://localhost:8080/App-RoomBar/01/06/01/".equals(urlDestino)) {
                     /*Intent settings = new Intent(Settings.ACTION_LOCALE_SETTINGS);
                     startActivity(settings);
                     return true;
                     */
-                } else if ("http://www.roombar.com/App-RoomBar/01/06/02/".equals(urlDestino)) {
+                } else if ("http://localhost:8080/App-RoomBar/01/06/02/".equals(urlDestino)) {
                     //get Data from webservice
                     String ssid = "PRUEBA";
                     String password = "prueba12";
@@ -520,7 +372,7 @@ public class FullscreenActivity extends AppCompatActivity {
                         setWifiTetheringEnabled(true, ssid, password);
                     }catch(Exception e){}
                     retorno= false;
-                } else if ("http://www.roombar.com/App-RoomBar/01/06/03/".equals(urlDestino)) {
+                } else if ("http://localhost:8080/App-RoomBar/01/06/03/".equals(urlDestino)) {
                     //CAMARA
                     final String dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/picFolder/";
                     File newdir = new File(dir);
@@ -543,7 +395,7 @@ public class FullscreenActivity extends AppCompatActivity {
                     startActivityForResult(cameraIntent, 0);
 
                     retorno= true;
-                } else if ("http://www.roombar.com/App-RoomBar/01/06/04/".equals(urlDestino)) {
+                } else if ("http://localhost:8080/App-RoomBar/01/06/04/".equals(urlDestino)) {
                     final String m_Text = "1234";
                     AlertDialog.Builder builder = new AlertDialog.Builder(FullscreenActivity.this, R.style.MyCustomDialogTheme);
 
@@ -589,7 +441,7 @@ public class FullscreenActivity extends AppCompatActivity {
                     });
                     input.requestFocus();
                     retorno= true;
-                } else if ("http://www.roombar.com/App-RoomBar/01/06/05/".equals(urlDestino)) {
+                } else if ("http://localhost:8080/App-RoomBar/01/06/05/".equals(urlDestino)) {
                     //Telefono
                     //get Data from webservice
                     AlertDialog.Builder builder = new AlertDialog.Builder(FullscreenActivity.this, R.style.MyCustomDialogTheme);
@@ -688,6 +540,11 @@ public class FullscreenActivity extends AppCompatActivity {
                     });
                     input.requestFocus();
                     retorno= true;
+                }else{
+                    if(!Utilidades.comprobarConexion(urlDestino,getApplicationContext())){
+                        Intent intent = new Intent(getApplicationContext(), InicioActivity.class);
+                        startActivity(intent);
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -728,6 +585,10 @@ public class FullscreenActivity extends AppCompatActivity {
             if(!errorLoading) {
                 urlSaved = url;
             }
+            if("404 - Not Found".equals(view.getTitle().trim())){
+                Intent intent = new Intent(getApplicationContext(), InicioActivity.class);
+                startActivity(intent);
+            }
             errorLoading=false;
         }
 
@@ -735,7 +596,7 @@ public class FullscreenActivity extends AppCompatActivity {
         public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
             try {
                 super.onReceivedError(view, errorCode, description, failingUrl);
-                if (!comprobarConexion(failingUrl)) {
+                if (!Utilidades.comprobarConexion(failingUrl,getApplicationContext())) {
                     Toast.makeText(getApplicationContext(), "Web no cacheada", Toast.LENGTH_LONG).show();
                     errorLoading = true;
                 } else {
@@ -747,7 +608,6 @@ public class FullscreenActivity extends AppCompatActivity {
             }catch(Exception e){}
             }
         }
-
     private boolean listaNegraNumeros(String s) {
         boolean retorno=false;
         String[] listaTelefonos=new String[]{"80"};
@@ -780,7 +640,7 @@ public class FullscreenActivity extends AppCompatActivity {
 
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
             String urlDestino = url;
-            if(!comprobarConexion(urlDestino)){
+            if(!Utilidades.comprobarConexion(urlDestino,getApplicationContext())){
                 Toast.makeText(getApplicationContext(),getResources().getString(R.string.no_web),Toast.LENGTH_LONG).show();
                 return true;
                 //view.goBack();
@@ -791,45 +651,14 @@ public class FullscreenActivity extends AppCompatActivity {
     }
 
 
-    public boolean comprobarConexion(String urlString) {
-        boolean retorno=false;
-        try {
-            /*ConnectivityManager cm =
-                    (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-
-            NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-            if (!activeNetwork.isConnectedOrConnecting()) {
-                retorno = false;
-            } else {*/
-                try {
-                    StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-
-                    StrictMode.setThreadPolicy(policy);
-                    URL url = new URL(urlString);
-                    HttpURLConnection http = (HttpURLConnection) url.openConnection();
-                    int statusCode = http.getResponseCode();
-                    if (statusCode == 200) {
-                        retorno = true;
-                    } else {
-                        retorno = false;
-                    }
-                } catch (Exception e) {
-                    retorno = false;
-                }
-
-            //}
-        }catch(Exception e1){}
-        return retorno;
-    }
-
     public boolean onKeyUp(int keyCode,KeyEvent event){
         if(keyCode==KeyEvent.KEYCODE_MENU){
-            if(!comprobarConexion(testUrl)){
+            /*if(!Utilidades.comprobarConexion(testUrl,getApplicationContext())){
                 webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ONLY);
             }else{
                 webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
-            }
-            webview.loadUrl("http://www.roombar.com/App-RoomBar/01/06/02/");
+            }*/
+            webview.loadUrl("http://localhost:8080/App-RoomBar/01/06/02/");
             return true;
         } else {
             return super.onKeyUp(keyCode, event);
@@ -839,11 +668,7 @@ public class FullscreenActivity extends AppCompatActivity {
     private void sendMail(String email, String subject, String messageBody,String filename)
     {
         try {
-            GMailSender sender = new GMailSender("fraggelillo666@gmail.com", "alfaromeogt");
-            sender.sendMail("This is Subject",
-                    "This is Body",
-                    "fraggelillo666@gmail.com",
-                    "fraggelillo666@gmail.com",filename);
+           //ENVIO DE EMAIL
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -883,84 +708,6 @@ public class FullscreenActivity extends AppCompatActivity {
             }
             return null;
         }
-    }
-    public static void preventStatusBarExpansion(Context context) {
-        try {
-
-            WindowManager manager = ((WindowManager) context.getApplicationContext()
-                    .getSystemService(Context.WINDOW_SERVICE));
-
-            Activity activity = (Activity) context;
-            WindowManager.LayoutParams localLayoutParams = new WindowManager.LayoutParams();
-            localLayoutParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_ERROR;
-            localLayoutParams.gravity = Gravity.TOP;
-            localLayoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
-
-                    // this is to enable the notification to recieve touch events
-                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
-
-                    // Draws over status bar
-                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
-
-            localLayoutParams.width = WindowManager.LayoutParams.MATCH_PARENT;
-            int resId = activity.getResources().getIdentifier("status_bar_height", "dimen", "android");
-            int result = 0;
-            if (resId > 0) {
-                result = activity.getResources().getDimensionPixelSize(resId);
-            }
-
-            localLayoutParams.height = result;
-
-            localLayoutParams.format = PixelFormat.TRANSPARENT;
-
-            FullscreenActivity.customViewGroup view = new FullscreenActivity.customViewGroup(context);
-
-            manager.addView(view, localLayoutParams);
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-    }
-
-    public static class customViewGroup extends ViewGroup {
-
-        public customViewGroup(Context context) {
-            super(context);
-        }
-
-        @Override
-        protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        }
-
-        @Override
-        public boolean onInterceptTouchEvent(MotionEvent ev) {
-            Log.v("customViewGroup", "**********Intercepted");
-            return true;
-        }
-    }
-
-
-
-    protected void disableStatusBar() {
-
-        WindowManager manager = ((WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE));
-
-        WindowManager.LayoutParams localLayoutParams = new WindowManager.LayoutParams();
-        localLayoutParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_ERROR;
-        localLayoutParams.gravity = Gravity.TOP;
-        localLayoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
-
-                // this is to enable the notification to receive touch events
-                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
-
-                // Draws over status bar
-                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
-
-        localLayoutParams.width = WindowManager.LayoutParams.MATCH_PARENT;
-        localLayoutParams.height = (int) (40 * getResources().getDisplayMetrics().scaledDensity);
-        localLayoutParams.format = PixelFormat.TRANSPARENT;
-
-        blockingView = new FullscreenActivity.customViewGroup(this);
-        manager.addView(blockingView, localLayoutParams);
     }
 }
 

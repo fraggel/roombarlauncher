@@ -12,7 +12,7 @@ public class VersionThread extends AsyncTask<String, Void, String> {
     protected String doInBackground(String... params) {
         String retorno="";
         try {
-            URL url = new URL("http://localhost:8080/");
+            URL url = new URL("http://localhost:8080/index.php");
             HttpURLConnection http = null;
             int statusCode=0;
             while(statusCode!=200) {
