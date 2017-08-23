@@ -36,6 +36,7 @@ import java.sql.ResultSet;
 public class NotifyService extends Service{
     static long downloadREF = -1;
     static long downloadREF2 = -1;
+    static long downloadREF3 = -1;
     @Override
     public IBinder onBind(Intent arg0) {
         return null;
@@ -45,7 +46,10 @@ public class NotifyService extends Service{
     public int onStartCommand(Intent intent, int flags, int startId) {
             double versionActual=0.0;
             double versionServidor=0.0;
-            File ff=new File("/sdcard/roombar.txt");
+            double versionActualAPK=0.0;
+            double versionServidorAPK=0.0;
+            File ff=new File(Environment.getExternalStorageDirectory() + "/roombar.txt");
+            File ff2=new File(Environment.getExternalStorageDirectory() + "/roombarlauncher.txt");
             BufferedReader in=null;
             BufferedReader br= null;
             try {
@@ -55,9 +59,36 @@ public class NotifyService extends Service{
                     URL jsonUrl = new URL("http://fraggel/roombar.txt");
                     in = new BufferedReader(new InputStreamReader(jsonUrl.openStream()));
                     versionServidor = Double.parseDouble(in.readLine());
+
                 }else{
                     versionActual=0.0;
                     versionServidor=0.1;
+                }
+                if(ff2.exists()){
+                    br=new BufferedReader(new InputStreamReader(new FileInputStream(ff2)));
+                    versionActualAPK=Double.parseDouble(br.readLine());
+                    URL jsonUrl = new URL("http://fraggel/roombarlauncher.txt");
+                    in = new BufferedReader(new InputStreamReader(jsonUrl.openStream()));
+                    versionServidorAPK = Double.parseDouble(in.readLine());
+
+                }else{
+                    versionActualAPK=0.0;
+                    versionServidorAPK=0.1;
+                    if(versionActualAPK<versionServidorAPK){
+                        DownloadManager.Request request = new DownloadManager.Request(Uri.parse("http://fraggel/roombarlauncher.apk"));
+                        request.setDescription("roombarlauncher.apk");
+                        request.setTitle("roombarlauncher.apk");
+                        if (Build.VERSION.SDK_INT >= 11) {
+                            request.allowScanningByMediaScanner();
+                            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                            new File(Environment.getExternalStorageDirectory() + "/droidphp/roombarlauncher.apk").delete();
+
+                        }
+                        request.setDestinationInExternalPublicDir("/droidphp/", "roombarlauncher.apk");
+                        DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+                        Toast.makeText(getApplicationContext(), "Actualizando servicio" + " " + "roombarlauncher.apk", Toast.LENGTH_SHORT).show();
+                        downloadREF3 = manager.enqueue(request);
+                    }
                 }
             } catch (Exception e) {
                 versionActual=0.0;

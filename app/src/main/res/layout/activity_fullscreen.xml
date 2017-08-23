@@ -10,6 +10,5 @@
                 android:layout_height="match_parent"
                 android:keepScreenOn="false"
                 android:overScrollMode="always"
-                android:scrollbars="none"
-                android:scrollIndicators="none" />
+                android:scrollbars="none" />
 </FrameLayout>

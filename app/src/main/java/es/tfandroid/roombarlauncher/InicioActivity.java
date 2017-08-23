@@ -1,5 +1,6 @@
 package es.tfandroid.roombarlauncher;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
@@ -8,14 +9,16 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.PixelFormat;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Gravity;
@@ -28,69 +31,76 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import eu.chainfire.libsuperuser.Shell;
-
-public class InicioActivity extends AppCompatActivity implements AsyncResponse{
+public class InicioActivity extends Activity implements AsyncResponse{
     public static final int OVERLAY_PERMISSION_REQ_CODE = 4545;
     protected customViewGroup blockingView = null;
     private SharedPreferences preferences;
-
-    public static String imei = null;
-    public static String imei2 = null;
-    String testUrl="http://localhost:8080/index.php";
+    public static TerminalBean terminalBean=null;
+    public static String imei = "";
+    public static String imei2 = "";
+    public static String mac = "";
+    public static String mac2 = "";
+    //FRAGGEL app interna
+    //String testUrl="http://localhost:8080/index.php";
+    String testUrl="http://www.roombar.com/App-RoomBar/01/";
     static long downloadREF = -1;
     static long downloadREF2 = -1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_inicio);
         NotificationManager nm=(NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
         nm.cancelAll();
-        ActionBar actionBar = null;
+        /*ActionBar actionBar = null;
         actionBar = getSupportActionBar();
         actionBar.setTitle("");
-        actionBar.hide();
-        new File("/sdcard/droidphp/conf/").mkdirs();
-        new File("/sdcard/droidphp/hosts/").mkdirs();
-        new File("/sdcard/droidphp/conf/nginx/conf/").mkdirs();
-        new File("/sdcard/droidphp/hosts/nginx/").mkdirs();
-        new File("/sdcard/droidphp/tmp/").mkdirs();
-        new File("/sdcard/droidphp/logs/").mkdirs();
-        new File("/sdcard/droidphp/sessions/").mkdirs();
-        Utilidades.setMobileDataState(true,getApplicationContext());
+        actionBar.hide();*/
+        new File(Constants.SERVER_LOCATION).mkdirs();
+        new File(Environment.getExternalStorageDirectory() + "/droidphp/conf/").mkdirs();
+        new File(Environment.getExternalStorageDirectory() + "/droidphp/hosts/").mkdirs();
+        new File(Environment.getExternalStorageDirectory() + "/droidphp/conf/nginx/conf/").mkdirs();
+        new File(Environment.getExternalStorageDirectory() + "/droidphp/hosts/nginx/").mkdirs();
+        new File(Environment.getExternalStorageDirectory() + "/droidphp/tmp/").mkdirs();
+        new File(Environment.getExternalStorageDirectory() + "/droidphp/logs/").mkdirs();
+        new File(Environment.getExternalStorageDirectory() + "/droidphp/sessions/").mkdirs();
+        Utilidades.activarDatos(getApplicationContext());
+
         //preventStatusBarExpansion(this);
 
         try{
         TelephonyManager tm = (TelephonyManager) getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
 
             if (tm != null) {
-                imei = tm.getDeviceId(0);
-                imei2= tm.getDeviceId(1);
-
-            }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                    imei = tm.getDeviceId(0);
+                    imei2= tm.getDeviceId(1);
+                } else{
+                    imei=tm.getDeviceId();
+                    imei2=tm.getDeviceId();
+                }
 
         } catch (Exception e) {
             imei = "";
             imei2="";
         }
-        Utilidades.createMysqlUpdateRepo(getApplicationContext());
-
+        mac=Utilidades.getMACAddress("wlan0");
+        mac2=Utilidades.getMACAddress("eth0");
+/*
 
         try {
             this.registerReceiver(this.mWifi, new IntentFilter(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION));
             this.registerReceiver(this.mNetworkStateReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
         } catch (Exception e) {
 
-        }
+        }*/
 
             preferences = PreferenceManager.
                     getDefaultSharedPreferences(getApplicationContext());
-         try{
+        /* try{
                 ZipInputStream zipInputStream = null;
                 try {
                     zipInputStream = new ZipInputStream(getApplicationContext().getAssets().open("data.zip"));
@@ -124,6 +134,7 @@ public class InicioActivity extends AppCompatActivity implements AsyncResponse{
                  e.printStackTrace();
              }
 
+             //FRAGGEL app interna
             boolean enableSU = preferences.getBoolean("run_as_root", false);
             final String execName = preferences.getString("use_server_httpd", "lighttpd");
             final String bindPort = preferences.getString("server_port", "8080");
@@ -140,12 +151,15 @@ public class InicioActivity extends AppCompatActivity implements AsyncResponse{
             for (String queryRes : res){
                 System.out.println(queryRes);
             }
-        }catch(Exception e){
-            e.printStackTrace();
-        }
+             Utilidades.createMysqlUpdateRepo(getApplicationContext());
+
+
+         }catch(Exception e){
+             e.printStackTrace();
+         }*/
         VersionThread asyncTask = new VersionThread();
         asyncTask.delegate = this;
-        asyncTask.execute();
+        asyncTask.execute(imei,imei2,mac,mac2);
     }
     /*private BroadcastReceiver mNetworkStateReceiver =new BroadcastReceiver() {
         @Override
@@ -160,15 +174,15 @@ public class InicioActivity extends AppCompatActivity implements AsyncResponse{
             }
         }
     };*/
-    private BroadcastReceiver mNetworkStateReceiver =new BroadcastReceiver() {
+    /*private BroadcastReceiver mNetworkStateReceiver =new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             VersionThread asyncTask = new VersionThread();
             asyncTask.delegate = InicioActivity.this;
-            asyncTask.execute();
+            asyncTask.execute(imei,imei2,mac,mac2);
         }
-    };
-    private final BroadcastReceiver mWifi = new BroadcastReceiver() {
+    };*/
+    /*private final BroadcastReceiver mWifi = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
@@ -184,7 +198,7 @@ public class InicioActivity extends AppCompatActivity implements AsyncResponse{
                     }
                     VersionThread asyncTask = new VersionThread();
                     asyncTask.delegate = InicioActivity.this;
-                    asyncTask.execute();
+                    asyncTask.execute(imei,imei2,mac,mac2);
                     //((TextView)findViewById(R.id.batteryLevel)).setText("Wifi on");
                 }
                 else {
@@ -192,7 +206,7 @@ public class InicioActivity extends AppCompatActivity implements AsyncResponse{
                 }
             }
         }
-    };
+    };*/
     public boolean onKeyUp(int keyCode,KeyEvent event){
         if(keyCode==KeyEvent.KEYCODE_MENU){
             return true;
@@ -210,7 +224,9 @@ public class InicioActivity extends AppCompatActivity implements AsyncResponse{
 
                 e.printStackTrace();
             }*/
-            try {
+
+            //FRAGGEL app interna
+            /*try {
                 Utilidades.setPermissionRecursive(new File(Constants.INTERNAL_LOCATION));
             } catch (Exception e) {
                 e.printStackTrace();
@@ -231,14 +247,17 @@ public class InicioActivity extends AppCompatActivity implements AsyncResponse{
             List<String> res = Shell.run(shell, command, null, true);
             for (String queryRes : res){
                 System.out.println(queryRes);
-            }
+            }*/
         }catch(Exception e){
             e.printStackTrace();
         }
+        Intent intent = getIntent();
+        String action = intent.getAction();
 
+        Utilidades.activarDatos(getApplicationContext());
         VersionThread asyncTask = new VersionThread();
         asyncTask.delegate = this;
-        asyncTask.execute();
+        asyncTask.execute(imei,imei2,mac,mac2);
         super.onResume();
     }
 
@@ -253,18 +272,20 @@ public class InicioActivity extends AppCompatActivity implements AsyncResponse{
     }
     @Override
     public void processFinish(String output) {
-        if(!"".equals(output)){
+        if(!"".equals(output) && !"NotFound".equals(output)){
+            terminalBean=Utilidades.crearTerminalBean(output.split(";"));
+            Utilidades.actualizarDatos(getApplicationContext(),InicioActivity.terminalBean);
             Intent intent = new Intent(getApplicationContext(), FullscreenActivity.class);
             startActivity(intent);
         }
     }
     @Override
     protected void onDestroy() {
-        try{
+        /*try{
             unregisterReceiver(this.mWifi);
             //unregisterReceiver(this.mNetworkStateReceiver);
 
-        }catch(Exception e){}
+        }catch(Exception e){}*/
         if (blockingView!=null) {
             WindowManager manager = ((WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE));
             manager.removeView(blockingView);
@@ -334,12 +355,12 @@ public class InicioActivity extends AppCompatActivity implements AsyncResponse{
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == OVERLAY_PERMISSION_REQ_CODE) {
-            if (!Settings.canDrawOverlays(this)) {
+            /*if (!Settings.canDrawOverlays(this)) {
                 Toast.makeText(this, "User can access system settings without this permission!", Toast.LENGTH_SHORT).show();
             }
             else
-            { disableStatusBar();
-            }
+            { */disableStatusBar();
+            //}
         }
     }
 

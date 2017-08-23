@@ -33,17 +33,17 @@ public class DownloadReceiver extends BroadcastReceiver {
                     long referenceId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
                     if(referenceId==Utilidades.downloadREF) {
                         ZipInputStream zipInputStream = null;
-                        zipInputStream = new ZipInputStream(new FileInputStream(new File("/sdcard/droidphp/localhost.sql.zip")));
+                        zipInputStream = new ZipInputStream(new FileInputStream(new File(Environment.getExternalStorageDirectory() + "/droidphp/localhost.sql.zip")));
                         ZipEntry zipEntry;
                         try {
                             FileOutputStream fout;
                             while ((zipEntry = zipInputStream.getNextEntry()) != null) {
                                 if (zipEntry.isDirectory()) {
-                                    File file = new File("/sdcard/htdocs/" + zipEntry.getName());
+                                    File file = new File(Environment.getExternalStorageDirectory() + "/htdocs/" + zipEntry.getName());
                                     if (!file.isDirectory()) file.mkdirs();
                                 } else {
 
-                                    fout = new FileOutputStream("/sdcard/htdocs/" + zipEntry.getName());
+                                    fout = new FileOutputStream(Environment.getExternalStorageDirectory() + "/htdocs/" + zipEntry.getName());
                                     byte[] buffer = new byte[4096 * 10];
                                     int length;
                                     while ((length = zipInputStream.read(buffer)) != -1) {
@@ -60,17 +60,17 @@ public class DownloadReceiver extends BroadcastReceiver {
                         }
                     }else if(referenceId==Utilidades.downloadREF2){
                         ZipInputStream zipInputStream = null;
-                        zipInputStream = new ZipInputStream(new FileInputStream(new File("/sdcard/droidphp/sqlwebupdate.zip")));
+                        zipInputStream = new ZipInputStream(new FileInputStream(new File(Environment.getExternalStorageDirectory() + "/droidphp/sqlwebupdate.zip")));
                         ZipEntry zipEntry;
                         try {
                             FileOutputStream fout;
                             while ((zipEntry = zipInputStream.getNextEntry()) != null) {
                                 if (zipEntry.isDirectory()) {
-                                    File file = new File("/sdcard/htdocs/" + zipEntry.getName());
+                                    File file = new File(Environment.getExternalStorageDirectory() + "/htdocs/" + zipEntry.getName());
                                     if (!file.isDirectory()) file.mkdirs();
                                 } else {
 
-                                    fout = new FileOutputStream("/sdcard/htdocs/" + zipEntry.getName());
+                                    fout = new FileOutputStream(Environment.getExternalStorageDirectory() + "/htdocs/" + zipEntry.getName());
                                     byte[] buffer = new byte[4096 * 10];
                                     int length;
                                     while ((length = zipInputStream.read(buffer)) != -1) {
@@ -81,6 +81,23 @@ public class DownloadReceiver extends BroadcastReceiver {
                                 }
                             }
                             zipInputStream.close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }else if(referenceId==Utilidades.downloadREF3){
+                        try {
+                            Process proc=Runtime.getRuntime().exec(new String[]{"su","pm install -r "+Environment.getExternalStorageDirectory() + "/droidphp/roombarlauncher.apk"});
+                            proc.waitFor();
+                            File ff=new File(Environment.getExternalStorageDirectory() + "/roombarlauncher.txt");
+                            BufferedWriter brw=new BufferedWriter(new OutputStreamWriter(new FileOutputStream(ff)));
+                            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+
+                            StrictMode.setThreadPolicy(policy);
+                            URL jsonUrl = new URL("http://fraggel/roombarlauncher.txt");
+                            BufferedReader in = new BufferedReader(new InputStreamReader(jsonUrl.openStream()));
+                            brw.write(in.readLine());
+                            brw.flush();
+                            brw.close();
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -95,16 +112,15 @@ public class DownloadReceiver extends BroadcastReceiver {
                                 redirectErrorStream(true).
                                 start();
                         OutputStream outputStream = process.getOutputStream();
-                        outputStream.write(("source "+"/sdcard/htdocs/localhost_duvfjvdv_apkjiayu.sql\n").getBytes());
-                        outputStream.write(("source "+"/sdcard/htdocs/localhost_duvfjvdv_smf.sql\n").getBytes());
-                        outputStream.write(("source "+"/sdcard/htdocs/localhost_duvfjvdv_tfweb.sql\n").getBytes());
+                        outputStream.write(("source "+Environment.getExternalStorageDirectory() + "/htdocs/localhost_duvfjvdv_apkjiayu.sql\n").getBytes());
+                        outputStream.write(("source "+Environment.getExternalStorageDirectory() + "/htdocs/localhost_duvfjvdv_smf.sql\n").getBytes());
+                        outputStream.write(("source "+Environment.getExternalStorageDirectory() + "/htdocs/localhost_duvfjvdv_tfweb.sql\n").getBytes());
                         outputStream.flush();
                         outputStream.close();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    Utilidades.cambiarBarraEstado(context,InicioActivity.imei,InicioActivity.imei2);
-                    File ff=new File("/sdcard/roombar.txt");
+                    File ff=new File(Environment.getExternalStorageDirectory() + "/roombar.txt");
                     BufferedWriter brw=new BufferedWriter(new OutputStreamWriter(new FileOutputStream(ff)));
                     StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
 

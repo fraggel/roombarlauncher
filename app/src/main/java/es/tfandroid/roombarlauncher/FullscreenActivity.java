@@ -10,10 +10,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Bitmap;
-import android.graphics.PixelFormat;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
@@ -22,84 +19,59 @@ import android.os.AsyncTask;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.provider.Settings;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
-import android.telephony.TelephonyManager;
 import android.text.InputType;
-import android.util.Log;
-import android.view.Gravity;
 import android.view.KeyEvent;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.webkit.WebChromeClient;
-import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Properties;
+import java.security.spec.ECField;
 
-import javax.activation.DataHandler;
-import javax.activation.DataSource;
-import javax.activation.FileDataSource;
-import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.mail.Multipart;
-import javax.mail.PasswordAuthentication;
-import javax.mail.Session;
 import javax.mail.Transport;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
-public class FullscreenActivity extends AppCompatActivity {
+public class FullscreenActivity extends Activity implements AsyncResponse {
 
-    WebView webview = null;
-    ActionBar actionBar = null;
+    static WebView webview = null;
+    //ActionBar actionBar = null;
     View mContentView;
     File newfilePicture =null;
     public static String urlSaved=null;
-    public static String testUrl="http://localhost:8080/index.php";
+    ProgressDialog mProgressDialog;
+    //FRAGGEL app interna
+    //public static String testUrl="http://localhost:8080/index.php";
+    public static String testUrl="http://www.roombar.com/App-RoomBar/01/";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         try {
             super.onCreate(savedInstanceState);
             setContentView(R.layout.activity_fullscreen);
-            actionBar = getSupportActionBar();
+            /*actionBar = getSupportActionBar();
             actionBar.setTitle("");
-            actionBar.hide();
+            actionBar.hide();*/
 
 
-            //while(!comprobarConexion(testUrl)){}
+            while(!Utilidades.comprobarConexion(testUrl,this)){}
             String buildprop = "";
 
                 //mControlsView = findViewById(R.id.fullscreen_content_controls);
@@ -107,10 +79,28 @@ public class FullscreenActivity extends AppCompatActivity {
 
                 webview = (WebView) findViewById(R.id.fullscreen_content);
 
+                webview.setOnTouchListener(new OnSwipeTouchListener() {
+                    public boolean onSwipeTop() {
+                        return true;
+                    }
+                    public boolean onSwipeRight() {
+                        onBackPressed();
+                        return true;
+                    }
+                    public boolean onSwipeLeft() {
+                        if(webview.canGoForward()){
+                            mProgressDialog.show();
+                            webview.goForward();
+                        }
+                        return true;
+                    }
+                    public boolean onSwipeBottom() {
+                        return true;
+                    }
+                });
                 webview.loadUrl(testUrl);
                 webview.setWebViewClient(new RoomBarWebViewClient());
                 webview.getSettings().setSupportZoom(false);
-                webview.setWebChromeClient(new ChromeWebViewClient());
                 webview.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
                 webview.getSettings().setBuiltInZoomControls(false);
                 webview.getSettings().setUserAgentString("Android");
@@ -121,13 +111,13 @@ public class FullscreenActivity extends AppCompatActivity {
                 webview.getSettings().setAppCacheMaxSize(1024 * 1024 * 1024);
                 webview.getSettings().setAppCachePath(this.getCacheDir().getAbsolutePath());
                 webview.getSettings().setAppCacheEnabled(true);
-                webview.getSettings().setBlockNetworkImage(false);
-                webview.getSettings().setBlockNetworkLoads(false);
+                /*webview.getSettings().setBlockNetworkImage(true);
+                webview.getSettings().setBlockNetworkLoads(true);*/
                 webview.getSettings().setEnableSmoothTransition(false);
                 webview.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
                 webview.getSettings().setLoadsImagesAutomatically(true);
 
-                webview.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
+                webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
 
                 this.registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
                 this.registerReceiver(this.mTime, new IntentFilter(Intent.ACTION_TIME_TICK));
@@ -137,7 +127,7 @@ public class FullscreenActivity extends AppCompatActivity {
                 this.registerReceiver(this.mBtC, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
                 this.registerReceiver(this.mWifi, new IntentFilter(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION));
                 this.registerReceiver(this.mNetworkStateReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
-                this.registerReceiver(this.mHome, new IntentFilter(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
+                //this.registerReceiver(this.mHome, new IntentFilter(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
 
         } catch (Exception e) {
             Intent intent = new Intent(getApplicationContext(), FullscreenActivity.class);
@@ -157,16 +147,19 @@ public class FullscreenActivity extends AppCompatActivity {
     public void onResume(){
 
         super.onResume();
-        this.registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        this.registerReceiver(this.mTime, new IntentFilter(Intent.ACTION_TIME_TICK));
-        this.registerReceiver(this.mBt, new IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED));
-        this.registerReceiver(this.mBt, new IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED));
-        this.registerReceiver(this.mBt, new IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECTED));
-        this.registerReceiver(this.mBtC, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
-        this.registerReceiver(this.mWifi, new IntentFilter(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION));
-        this.registerReceiver(this.mNetworkStateReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
-        this.registerReceiver(this.mHome, new IntentFilter(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
-
+        try {
+            this.registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+            this.registerReceiver(this.mTime, new IntentFilter(Intent.ACTION_TIME_TICK));
+            this.registerReceiver(this.mBt, new IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED));
+            this.registerReceiver(this.mBt, new IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED));
+            this.registerReceiver(this.mBt, new IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECTED));
+            this.registerReceiver(this.mBtC, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
+            this.registerReceiver(this.mWifi, new IntentFilter(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION));
+            this.registerReceiver(this.mNetworkStateReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+            //this.registerReceiver(this.mHome, new IntentFilter(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -234,7 +227,12 @@ public class FullscreenActivity extends AppCompatActivity {
             final String action = intent.getAction();
 
             if (action.equals(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)) {
-                webview.loadUrl(testUrl);
+                try {
+
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+
             }
         }
     };
@@ -278,8 +276,10 @@ public class FullscreenActivity extends AppCompatActivity {
                         //((TextView)findViewById(R.id.batteryLevel)).setText("Wifi not connected");
                     }
                     //((TextView)findViewById(R.id.batteryLevel)).setText("Wifi on");
+                    //Utilidades.recuentoMB(false);
                 }
                 else {
+                    //Utilidades.recuentoMB(true);
                     //((TextView)findViewById(R.id.batteryLevel)).setText("Wifi off");
                 }
             }
@@ -292,6 +292,7 @@ public class FullscreenActivity extends AppCompatActivity {
         if (webview != null) {
 
             if (webview.canGoBack()) {
+                mProgressDialog.show();
                 webview.goBack();
             } else {
                 if (webview.getUrl().equals(testUrl)) {
@@ -312,39 +313,7 @@ public class FullscreenActivity extends AppCompatActivity {
     }
     }
 
-    private String asignaFecha() {
-        String fecha_mod = null;
-        Calendar cal = Calendar.getInstance();
-        String day = String.valueOf(cal.get(Calendar.DAY_OF_MONTH));
-        String month = String.valueOf((cal.get(Calendar.MONTH) + 1));
-        String year = String.valueOf(cal.get(Calendar.YEAR));
-        if (day.length() < 2) {
-            day = "0" + day;
-        }
-        if (month.length() < 2) {
-            month = "0" + month;
-        }
-        fecha_mod = (day + "/" + month + "/" + year);
-        return fecha_mod;
-    }
-    private String asignaFechaCompleta(){
-        DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy, HH:mm");
-        return df.format(Calendar.getInstance().getTime());
-    }
-    private String asignaHoras() {
-        String fecha_mod = null;
-        Calendar cal = Calendar.getInstance();
-        String hour = String.valueOf(cal.get(Calendar.HOUR));
-        String minute = String.valueOf((cal.get(Calendar.MINUTE)));
-        if (hour.length() < 2) {
-            hour = "0" + hour;
-        }
-        if (minute.length() < 2) {
-            minute = "0" + minute;
-        }
-        fecha_mod = (hour + ":" + minute);
-        return fecha_mod;
-    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode,Intent data){
         super.onActivityResult(requestCode, resultCode, data);
@@ -358,26 +327,45 @@ public class FullscreenActivity extends AppCompatActivity {
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
             boolean retorno=false;
             try {
+                mProgressDialog = new ProgressDialog(FullscreenActivity.this);
+                mProgressDialog.setMessage("Loading........");
+                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                mProgressDialog.setCancelable(false);
+                mProgressDialog.show();
                 String urlDestino = url;//.getUrl().toString();
-                if ("http://localhost:8080/App-RoomBar/01/06/01/".equals(urlDestino)) {
+                VersionThread asyncTask = new VersionThread();
+                asyncTask.delegate = FullscreenActivity.this;
+                asyncTask.execute(InicioActivity.imei,InicioActivity.imei2,InicioActivity.mac,InicioActivity.mac2);
+
+                //FRAGGEL app interna
+                //String urlBase="http://localhost:8080/";
+                String urlBase="http://www.roombar.com";
+                if ((urlBase+"/App-RoomBar/01/06/01/").equals(urlDestino)) {
                     /*Intent settings = new Intent(Settings.ACTION_LOCALE_SETTINGS);
                     startActivity(settings);
                     return true;
                     */
-                } else if ("http://localhost:8080/App-RoomBar/01/06/02/".equals(urlDestino)) {
+                } else if ((urlBase+"/App-RoomBar/01/06/02/").equals(urlDestino)) {
                     //get Data from webservice
-                    String ssid = "PRUEBA";
-                    String password = "prueba12";
+                    String ssid = InicioActivity.terminalBean.getNameTethering();
+                    String password = InicioActivity.terminalBean.getPassTethering();
                     try{
-                        setWifiTetheringEnabled(true, ssid, password);
+                        Utilidades.setWifiTetheringEnabled(getApplicationContext(),true, ssid, password);
                     }catch(Exception e){}
                     retorno= false;
-                } else if ("http://localhost:8080/App-RoomBar/01/06/03/".equals(urlDestino)) {
+                    try {
+                        if (mProgressDialog != null) {
+                            if (mProgressDialog.isShowing()) {
+                                mProgressDialog.dismiss();
+                            }
+                        }
+                    }catch(Exception e){}
+                } else if ((urlBase+"/App-RoomBar/01/06/03/").equals(urlDestino)) {
                     //CAMARA
                     final String dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/picFolder/";
                     File newdir = new File(dir);
                     newdir.mkdirs();
-                    String file = dir + asignaFechaCompleta() + ".jpg";
+                    String file = dir + Utilidades.asignaFechaCompleta() + ".jpg";
                     newfilePicture = new File(file);
                     File[] files = newdir.listFiles();
                     for(int x=0;x<files.length;x++){
@@ -395,8 +383,15 @@ public class FullscreenActivity extends AppCompatActivity {
                     startActivityForResult(cameraIntent, 0);
 
                     retorno= true;
-                } else if ("http://localhost:8080/App-RoomBar/01/06/04/".equals(urlDestino)) {
-                    final String m_Text = "1234";
+                    try {
+                        if (mProgressDialog != null) {
+                            if (mProgressDialog.isShowing()) {
+                                mProgressDialog.dismiss();
+                            }
+                        }
+                    }catch(Exception e){}
+                } else if ((urlBase+"/App-RoomBar/01/06/04/").equals(urlDestino)) {
+                    final String m_Text = InicioActivity.terminalBean.getPassSistema();
                     AlertDialog.Builder builder = new AlertDialog.Builder(FullscreenActivity.this, R.style.MyCustomDialogTheme);
 
                     builder.setTitle(getResources().getString(R.string.hint_password));
@@ -441,7 +436,14 @@ public class FullscreenActivity extends AppCompatActivity {
                     });
                     input.requestFocus();
                     retorno= true;
-                } else if ("http://localhost:8080/App-RoomBar/01/06/05/".equals(urlDestino)) {
+                    try {
+                        if (mProgressDialog != null) {
+                            if (mProgressDialog.isShowing()) {
+                                mProgressDialog.dismiss();
+                            }
+                        }
+                    }catch(Exception e){}
+                } else if ((urlBase+"/App-RoomBar/01/06/05/").equals(urlDestino)) {
                     //Telefono
                     //get Data from webservice
                     AlertDialog.Builder builder = new AlertDialog.Builder(FullscreenActivity.this, R.style.MyCustomDialogTheme);
@@ -540,6 +542,13 @@ public class FullscreenActivity extends AppCompatActivity {
                     });
                     input.requestFocus();
                     retorno= true;
+                    try {
+                        if (mProgressDialog != null) {
+                            if (mProgressDialog.isShowing()) {
+                                mProgressDialog.dismiss();
+                            }
+                        }
+                    }catch(Exception e){}
                 }else{
                     if(!Utilidades.comprobarConexion(urlDestino,getApplicationContext())){
                         Intent intent = new Intent(getApplicationContext(), InicioActivity.class);
@@ -548,37 +557,15 @@ public class FullscreenActivity extends AppCompatActivity {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-            /*if(!comprobarConexion(testUrl)){
-                Intent intent = new Intent(getApplicationContext(), InicioActivity.class);
-                startActivity(intent);
-            }*/
+                if(!Utilidades.comprobarConexion(testUrl,getApplicationContext())){
+                    Intent intent = new Intent(getApplicationContext(), InicioActivity.class);
+                    startActivity(intent);
+                }
             }
 
             return retorno;
         }
-        private void setWifiTetheringEnabled(boolean enable,String nombreSSID,String pass) throws Exception {
 
-                WifiManager mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-                Method method = mWifiManager.getClass().getMethod("getWifiApConfiguration");
-                WifiConfiguration wifiConfiguration = (WifiConfiguration) method.invoke(mWifiManager);
-                //WifiConfiguration wifiConfiguration = new WifiConfiguration();
-                wifiConfiguration.SSID = nombreSSID;
-                wifiConfiguration.preSharedKey = pass;
-                wifiConfiguration.hiddenSSID = false;
-                wifiConfiguration.allowedAuthAlgorithms.set(WifiConfiguration.AuthAlgorithm.OPEN);
-                wifiConfiguration.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
-                wifiConfiguration.allowedKeyManagement.set(4);
-                wifiConfiguration.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
-                wifiConfiguration.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
-
-                Method method2 = mWifiManager.getClass().getMethod("setWifiApConfiguration", WifiConfiguration.class);
-                method2.invoke(mWifiManager, wifiConfiguration);
-                mWifiManager.setWifiEnabled(false);
-                //mWifiManager.setWifiApEnabled(wifiConfiguration,enable);
-                Method method3 = mWifiManager.getClass().getMethod("setWifiApEnabled",  WifiConfiguration.class, boolean.class);
-                method3.invoke(mWifiManager,  wifiConfiguration, enable);
-
-        }
 
         @Override
         public void onPageFinished(WebView view, String url){
@@ -589,12 +576,27 @@ public class FullscreenActivity extends AppCompatActivity {
                 Intent intent = new Intent(getApplicationContext(), InicioActivity.class);
                 startActivity(intent);
             }
+            try {
+                try {
+                    if (mProgressDialog != null) {
+                        if (mProgressDialog.isShowing()) {
+                            mProgressDialog.dismiss();
+                        }
+                    }
+                }catch(Exception e){}
+            }catch(Exception e){}
             errorLoading=false;
         }
-
         @Override
         public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
             try {
+                try {
+                    if (mProgressDialog != null) {
+                        if (mProgressDialog.isShowing()) {
+                            mProgressDialog.dismiss();
+                        }
+                    }
+                }catch(Exception e){}
                 super.onReceivedError(view, errorCode, description, failingUrl);
                 if (!Utilidades.comprobarConexion(failingUrl,getApplicationContext())) {
                     Toast.makeText(getApplicationContext(), "Web no cacheada", Toast.LENGTH_LONG).show();
@@ -635,30 +637,30 @@ public class FullscreenActivity extends AppCompatActivity {
         }
         return retorno;
     }
-
-    private class ChromeWebViewClient extends WebChromeClient {
-
-        public boolean shouldOverrideUrlLoading(WebView view, String url) {
-            String urlDestino = url;
-            if(!Utilidades.comprobarConexion(urlDestino,getApplicationContext())){
-                Toast.makeText(getApplicationContext(),getResources().getString(R.string.no_web),Toast.LENGTH_LONG).show();
-                return true;
-                //view.goBack();
-            }else {
-                return false;
-            }
+    @Override
+    public void processFinish(String output) {
+        if(!"".equals(output) && !"NotFound".equals(output)){
+            InicioActivity.terminalBean=Utilidades.crearTerminalBean(output.split(";"));
+            Utilidades.actualizarDatos(getApplicationContext(),InicioActivity.terminalBean);
         }
     }
 
-
     public boolean onKeyUp(int keyCode,KeyEvent event){
         if(keyCode==KeyEvent.KEYCODE_MENU){
-            /*if(!Utilidades.comprobarConexion(testUrl,getApplicationContext())){
+            if(!Utilidades.comprobarConexion(testUrl,getApplicationContext())){
                 webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ONLY);
             }else{
                 webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
-            }*/
-            webview.loadUrl("http://localhost:8080/App-RoomBar/01/06/02/");
+            }
+            //FRAGGEL app interna
+            //String urlBase="http://localhost:8080";
+            String urlBase="http://www.roombar.com";
+            webview.loadUrl((urlBase+"/App-RoomBar/01/06/02/"));
+            String ssid = InicioActivity.terminalBean.getNameTethering();
+            String password = InicioActivity.terminalBean.getPassTethering();
+            try{
+                Utilidades.setWifiTetheringEnabled(getApplicationContext(),true, ssid, password);
+            }catch(Exception e){}
             return true;
         } else {
             return super.onKeyUp(keyCode, event);
@@ -681,7 +683,7 @@ public class FullscreenActivity extends AppCompatActivity {
         this.unregisterReceiver(this.mBt);
         this.unregisterReceiver(this.mBtC);
         this.unregisterReceiver(this.mWifi);
-        this.unregisterReceiver(this.mHome);
+        //this.unregisterReceiver(this.mHome);
         this.unregisterReceiver(this.mNetworkStateReceiver);
     }
     private class SendMailTask extends AsyncTask<Message, Void, Void> {
@@ -696,7 +698,13 @@ public class FullscreenActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            progressDialog.dismiss();
+            try {
+                if (mProgressDialog != null) {
+                    if (mProgressDialog.isShowing()) {
+                        mProgressDialog.dismiss();
+                    }
+                }
+            }catch(Exception e){}
         }
 
         @Override

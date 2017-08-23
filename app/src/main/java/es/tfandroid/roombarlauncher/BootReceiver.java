@@ -22,33 +22,16 @@ public class BootReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        /*try {
-           new File("/sdcard/droidphp/logs").mkdirs();
-        }catch(Exception e){}
-        try {
-            new File("/sdcard/droidphp/tmp").mkdirs();
-        }catch(Exception e){}
-        try {
-            new File("/sdcard/droidphp/sessions").mkdirs();
-        }catch(Exception e){}
-
-        try{
-            Runtime.getRuntime().exec("su -c \"nohup /system/droidphp/lighttpd/lighttpd -f /system/droidphp/lighttpd/lighttpd.conf -D 1>/dev/null 2>&1\"");
-        }catch(Exception e){}
-        try{
-            Runtime.getRuntime().exec("su -c \"nohup /system/droidphp/php/php-cgi -a -b /sdcard/droidphp/tmp/php.sock /system/droidphp/php/php.ini 1>/dev/null 2>&1\"");
-        }catch(Exception e){}
-
-        try{
-            Runtime.getRuntime().exec("su -c \"nohup /system/droidphp/mysql/mysqld --defaults-file=/system/droidphp/mysql/mysql.ini --user=root --language=/system/droidphp/mysql/share/mysql/english 1>/dev/null 2>&1\"");
-        }catch(Exception e){}
-        *//*busybox killall -SIGTERM lighttpd
+       /*busybox killall -SIGTERM lighttpd
         busybox killall -3 mysqld
         busybox killall -SIGTERM mysqld
         busybox killall -SIGTERM php-cgi*/
 
         /*try{
-            Runtime.getRuntime().exec("/data/data/org.opendroidphp/scripts/server-sh.sh");
+            Runbusybox killall -SIGTERM lighttpd
+        busybox killall -3 mysqld
+        busybox killall -SIGTERM mysqld
+        busybox killall -SIGTERM php-cgitime.getRuntime().exec("/data/data/org.opendroidphp/scripts/server-sh.sh");
         }catch(Exception e){}*/
 
         AlarmManager alarm = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
