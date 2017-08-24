@@ -25,12 +25,14 @@ import android.text.InputType;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.animation.AlphaAnimation;
 import android.view.inputmethod.EditorInfo;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -57,7 +59,9 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
     View mContentView;
     File newfilePicture =null;
     public static String urlSaved=null;
-    ProgressDialog mProgressDialog;
+    FrameLayout mProgressDialog;
+    AlphaAnimation inAnimation;
+    AlphaAnimation outAnimation;
     //FRAGGEL app interna
     //public static String testUrl="http://localhost:8080/index.php";
     public static String testUrl="http://www.roombar.com/App-RoomBar/01/";
@@ -89,7 +93,10 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
                     }
                     public boolean onSwipeLeft() {
                         if(webview.canGoForward()){
-                            mProgressDialog.show();
+                            inAnimation = new AlphaAnimation(0f, 1f);
+                            inAnimation.setDuration(200);
+                            mProgressDialog.setAnimation(inAnimation);
+                            mProgressDialog.setVisibility(View.VISIBLE);
                             webview.goForward();
                         }
                         return true;
@@ -292,7 +299,10 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
         if (webview != null) {
 
             if (webview.canGoBack()) {
-                mProgressDialog.show();
+                inAnimation = new AlphaAnimation(0f, 1f);
+                inAnimation.setDuration(200);
+                mProgressDialog.setAnimation(inAnimation);
+                mProgressDialog.setVisibility(View.VISIBLE);
                 webview.goBack();
             } else {
                 if (webview.getUrl().equals(testUrl)) {
@@ -327,11 +337,12 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
             boolean retorno=false;
             try {
-                mProgressDialog = new ProgressDialog(FullscreenActivity.this);
-                mProgressDialog.setMessage("Loading........");
-                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                mProgressDialog.setCancelable(false);
-                mProgressDialog.show();
+
+                mProgressDialog = (FrameLayout) findViewById(R.id.progressBarHolder);
+                inAnimation = new AlphaAnimation(0f, 1f);
+                inAnimation.setDuration(200);
+                mProgressDialog.setAnimation(inAnimation);
+                mProgressDialog.setVisibility(View.VISIBLE);
                 String urlDestino = url;//.getUrl().toString();
                 VersionThread asyncTask = new VersionThread();
                 asyncTask.delegate = FullscreenActivity.this;
@@ -352,14 +363,16 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
                     try{
                         Utilidades.setWifiTetheringEnabled(getApplicationContext(),true, ssid, password);
                     }catch(Exception e){}
-                    retorno= false;
+
                     try {
                         if (mProgressDialog != null) {
-                            if (mProgressDialog.isShowing()) {
-                                mProgressDialog.dismiss();
-                            }
+                            outAnimation = new AlphaAnimation(1f, 0f);
+                            outAnimation.setDuration(200);
+                            mProgressDialog.setAnimation(outAnimation);
+                            mProgressDialog.setVisibility(View.GONE);
                         }
                     }catch(Exception e){}
+                    retorno= true;
                 } else if ((urlBase+"/App-RoomBar/01/06/03/").equals(urlDestino)) {
                     //CAMARA
                     final String dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/picFolder/";
@@ -385,9 +398,10 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
                     retorno= true;
                     try {
                         if (mProgressDialog != null) {
-                            if (mProgressDialog.isShowing()) {
-                                mProgressDialog.dismiss();
-                            }
+                            outAnimation = new AlphaAnimation(1f, 0f);
+                            outAnimation.setDuration(200);
+                            mProgressDialog.setAnimation(outAnimation);
+                            mProgressDialog.setVisibility(View.GONE);
                         }
                     }catch(Exception e){}
                 } else if ((urlBase+"/App-RoomBar/01/06/04/").equals(urlDestino)) {
@@ -438,9 +452,10 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
                     retorno= true;
                     try {
                         if (mProgressDialog != null) {
-                            if (mProgressDialog.isShowing()) {
-                                mProgressDialog.dismiss();
-                            }
+                            outAnimation = new AlphaAnimation(1f, 0f);
+                            outAnimation.setDuration(200);
+                            mProgressDialog.setAnimation(outAnimation);
+                            mProgressDialog.setVisibility(View.GONE);
                         }
                     }catch(Exception e){}
                 } else if ((urlBase+"/App-RoomBar/01/06/05/").equals(urlDestino)) {
@@ -544,15 +559,21 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
                     retorno= true;
                     try {
                         if (mProgressDialog != null) {
-                            if (mProgressDialog.isShowing()) {
-                                mProgressDialog.dismiss();
-                            }
+                            outAnimation = new AlphaAnimation(1f, 0f);
+                            outAnimation.setDuration(200);
+                            mProgressDialog.setAnimation(outAnimation);
+                            mProgressDialog.setVisibility(View.GONE);
                         }
                     }catch(Exception e){}
                 }else{
-                    if(!Utilidades.comprobarConexion(urlDestino,getApplicationContext())){
+                    /*if(!Utilidades.comprobarConexion(urlDestino,getApplicationContext())){
                         Intent intent = new Intent(getApplicationContext(), InicioActivity.class);
                         startActivity(intent);
+                    }*/
+                    if(!Utilidades.comprobarConexion(testUrl,getApplicationContext())){
+                        webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ONLY);
+                    }else{
+                        webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
                     }
                 }
             } catch (Exception e) {
@@ -579,9 +600,10 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
             try {
                 try {
                     if (mProgressDialog != null) {
-                        if (mProgressDialog.isShowing()) {
-                            mProgressDialog.dismiss();
-                        }
+                        outAnimation = new AlphaAnimation(1f, 0f);
+                        outAnimation.setDuration(200);
+                        mProgressDialog.setAnimation(outAnimation);
+                        mProgressDialog.setVisibility(View.GONE);
                     }
                 }catch(Exception e){}
             }catch(Exception e){}
@@ -592,14 +614,14 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
             try {
                 try {
                     if (mProgressDialog != null) {
-                        if (mProgressDialog.isShowing()) {
-                            mProgressDialog.dismiss();
-                        }
+                        outAnimation = new AlphaAnimation(1f, 0f);
+                        outAnimation.setDuration(200);
+                        mProgressDialog.setAnimation(outAnimation);
+                        mProgressDialog.setVisibility(View.GONE);
                     }
                 }catch(Exception e){}
                 super.onReceivedError(view, errorCode, description, failingUrl);
                 if (!Utilidades.comprobarConexion(failingUrl,getApplicationContext())) {
-                    Toast.makeText(getApplicationContext(), "Web no cacheada", Toast.LENGTH_LONG).show();
                     errorLoading = true;
                 } else {
                     errorLoading = false;
@@ -700,9 +722,10 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
             super.onPostExecute(aVoid);
             try {
                 if (mProgressDialog != null) {
-                    if (mProgressDialog.isShowing()) {
-                        mProgressDialog.dismiss();
-                    }
+                    outAnimation = new AlphaAnimation(1f, 0f);
+                    outAnimation.setDuration(200);
+                    mProgressDialog.setAnimation(outAnimation);
+                    mProgressDialog.setVisibility(View.GONE);
                 }
             }catch(Exception e){}
         }

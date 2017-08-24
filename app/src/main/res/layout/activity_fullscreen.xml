@@ -3,6 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#e55427"
+    android:id="@+id/frameWebView"
     tools:context="es.tfandroid.roombarlauncher.FullscreenActivity">
             <WebView
                 android:id="@+id/fullscreen_content"
@@ -11,4 +12,20 @@
                 android:keepScreenOn="false"
                 android:overScrollMode="always"
                 android:scrollbars="none" />
+    <FrameLayout
+        android:id="@+id/progressBarHolder"
+        android:animateLayoutChanges="true"
+        android:visibility="gone"
+        android:alpha="0.6"
+        android:background="#000000"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ProgressBar
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            android:layout_gravity="center" />
+    </FrameLayout>
 </FrameLayout>

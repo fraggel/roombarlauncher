@@ -70,25 +70,24 @@ public class InicioActivity extends Activity implements AsyncResponse{
         Utilidades.activarDatos(getApplicationContext());
 
         //preventStatusBarExpansion(this);
+            try {
+                TelephonyManager tm = (TelephonyManager) getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
 
-        try{
-        TelephonyManager tm = (TelephonyManager) getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
-
-            if (tm != null) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-                    imei = tm.getDeviceId(0);
-                    imei2= tm.getDeviceId(1);
-                } else{
-                    imei=tm.getDeviceId();
-                    imei2=tm.getDeviceId();
+                if (tm != null) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                        imei = tm.getDeviceId(0);
+                    imei2 = tm.getDeviceId(1);
+                } else {
+                    imei = tm.getDeviceId();
+                    imei2 = tm.getDeviceId();
                 }
 
-        } catch (Exception e) {
-            imei = "";
-            imei2="";
-        }
-        mac=Utilidades.getMACAddress("wlan0");
-        mac2=Utilidades.getMACAddress("eth0");
+            } catch (Exception e) {
+                imei = "";
+                imei2 = "";
+            }
+            mac = Utilidades.getMACAddress("wlan0");
+            mac2 = Utilidades.getMACAddress("eth0");
 /*
 
         try {
@@ -158,8 +157,9 @@ public class InicioActivity extends Activity implements AsyncResponse{
              e.printStackTrace();
          }*/
         VersionThread asyncTask = new VersionThread();
-        asyncTask.delegate = this;
+        asyncTask.delegate = InicioActivity.this;
         asyncTask.execute(imei,imei2,mac,mac2);
+
     }
     /*private BroadcastReceiver mNetworkStateReceiver =new BroadcastReceiver() {
         @Override
@@ -217,6 +217,24 @@ public class InicioActivity extends Activity implements AsyncResponse{
     @Override
     public void onResume(){
         try{
+            try{
+                TelephonyManager tm = (TelephonyManager) getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
+
+                if (tm != null) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                        imei = tm.getDeviceId(0);
+                    imei2= tm.getDeviceId(1);
+                } else{
+                    imei=tm.getDeviceId();
+                    imei2=tm.getDeviceId();
+                }
+
+            } catch (Exception e) {
+                imei = "";
+                imei2="";
+            }
+            mac=Utilidades.getMACAddress("wlan0");
+            mac2=Utilidades.getMACAddress("eth0");
             /*try {
                 Settings.System.putString(getContentResolver(), "status_bar_hotel", "aaaa");
                 Settings.System.putString(getContentResolver(), "status_bar_habitacion", "eeee");
@@ -248,16 +266,17 @@ public class InicioActivity extends Activity implements AsyncResponse{
             for (String queryRes : res){
                 System.out.println(queryRes);
             }*/
+            Intent intent = getIntent();
+            String action = intent.getAction();
+            Utilidades.activarDatos(getApplicationContext());
+            VersionThread asyncTask = new VersionThread();
+            asyncTask.delegate=InicioActivity.this;
+            asyncTask.execute(imei,imei2,mac,mac2);
+
         }catch(Exception e){
             e.printStackTrace();
         }
-        Intent intent = getIntent();
-        String action = intent.getAction();
 
-        Utilidades.activarDatos(getApplicationContext());
-        VersionThread asyncTask = new VersionThread();
-        asyncTask.delegate = this;
-        asyncTask.execute(imei,imei2,mac,mac2);
         super.onResume();
     }
 
