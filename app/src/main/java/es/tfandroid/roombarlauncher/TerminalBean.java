@@ -1,5 +1,8 @@
 package es.tfandroid.roombarlauncher;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 /**
  * Created by root on 23/08/17.
  */
@@ -22,25 +25,47 @@ public class TerminalBean {
     String gpsPosition="";
     String tablet="";
     String urlDestino="";
+    String deviceBP="";
+    String vendorBP="";
+    String romBP="";
+    String romVersionBP="";
+    String apkVersionBP="";
+    String recoverypathBP="";
+    String urlApk="";
+    String urlROM="";
+    String ssid="";
+    String passSsid="";
+    String ssidKeyType="";
 
-    public TerminalBean(String imei, String imei2, String mac, String mac2, String hotel, String habitacion, String passTethering, String nameTethering, String mbTotales, String email, String passSistema, String nombre, String apellido1, String apellido2, String gpsPosition, String tablet, String urlDestino) {
-        this.imei = imei;
-        this.imei2 = imei2;
-        this.mac = mac;
-        this.mac2 = mac2;
-        this.hotel = hotel;
-        this.habitacion = habitacion;
-        this.passTethering = passTethering;
-        this.nameTethering = nameTethering;
-        this.mbTotales = mbTotales;
-        this.email = email;
-        this.passSistema = passSistema;
-        this.nombre = nombre;
-        this.apellido1 = apellido1;
-        this.apellido2 = apellido2;
-        this.gpsPosition = gpsPosition;
-        this.tablet = tablet;
-        this.urlDestino = urlDestino;
+    public TerminalBean(JSONObject jsonObject) throws JSONException {
+        this.imei = jsonObject.getString("imei");
+        this.imei2 = jsonObject.getString("imei2");
+        this.mac = jsonObject.getString("mac");
+        this.mac2 = jsonObject.getString("mac2");
+        this.hotel = jsonObject.getString("hotel");
+        this.habitacion = jsonObject.getString("habitacion");
+        this.passTethering = jsonObject.getString("passTethering");
+        this.nameTethering = jsonObject.getString("nameTethering");
+        this.mbTotales = jsonObject.getString("mbTotales");
+        this.email = jsonObject.getString("email");
+        this.passSistema = jsonObject.getString("passSistema");
+        this.nombre = jsonObject.getString("nombre");
+        this.apellido1 = jsonObject.getString("apellido1");
+        this.apellido2 = jsonObject.getString("apellido2");
+        this.gpsPosition = "";
+        this.tablet = jsonObject.getString("tablet");
+        this.urlDestino = "";
+        this.deviceBP=jsonObject.getString("device");
+        this.vendorBP=jsonObject.getString("vendor");
+        this.romBP=jsonObject.getString("rom");
+        this.romVersionBP=jsonObject.getString("romversion");
+        this.apkVersionBP=jsonObject.getString("apkversion");
+        this.recoverypathBP=jsonObject.getString("recoverypath");
+        this.urlApk=jsonObject.getString("urlApk");
+        this.urlROM=jsonObject.getString("urlROM");
+        this.ssid=jsonObject.getString("ssid");
+        this.passSsid=jsonObject.getString("passSsid");
+        this.ssidKeyType=jsonObject.getString("ssidKeyType");
     }
 
     public String getImei() {
@@ -177,5 +202,93 @@ public class TerminalBean {
 
     public void setUrlDestino(String urlDestino) {
         this.urlDestino = urlDestino;
+    }
+
+    public String getDeviceBP() {
+        return deviceBP;
+    }
+
+    public void setDeviceBP(String deviceBP) {
+        this.deviceBP = deviceBP;
+    }
+
+    public String getVendorBP() {
+        return vendorBP;
+    }
+
+    public void setVendorBP(String vendorBP) {
+        this.vendorBP = vendorBP;
+    }
+
+    public String getRomBP() {
+        return romBP;
+    }
+
+    public void setRomBP(String romBP) {
+        this.romBP = romBP;
+    }
+
+    public String getRomVersionBP() {
+        return romVersionBP;
+    }
+
+    public void setRomVersionBP(String romVersionBP) {
+        this.romVersionBP = romVersionBP;
+    }
+
+    public String getApkVersionBP() {
+        return apkVersionBP;
+    }
+
+    public void setApkVersionBP(String apkVersionBP) {
+        this.apkVersionBP = apkVersionBP;
+    }
+
+    public String getRecoverypathBP() {
+        return recoverypathBP;
+    }
+
+    public void setRecoverypathBP(String recoverypathBP) {
+        this.recoverypathBP = recoverypathBP;
+    }
+
+    public String getUrlApk() {
+        return urlApk;
+    }
+
+    public void setUrlApk(String urlApk) {
+        this.urlApk = urlApk;
+    }
+
+    public String getUrlROM() {
+        return urlROM;
+    }
+
+    public void setUrlROM(String urlROM) {
+        this.urlROM = urlROM;
+    }
+
+    public String getSsid() {
+        return ssid;
+    }
+
+    public void setSsid(String ssid) {
+        this.ssid = ssid;
+    }
+
+    public String getPassSsid() {
+        return passSsid;
+    }
+
+    public void setPassSsid(String passSsid) {
+        this.passSsid = passSsid;
+    }
+
+    public String getSsidKeyType() {
+        return ssidKeyType;
+    }
+
+    public void setSsidKeyType(String ssidKeyType) {
+        this.ssidKeyType = ssidKeyType;
     }
 }

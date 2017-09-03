@@ -5,24 +5,14 @@ import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Environment;
-import android.os.StrictMode;
-import android.widget.Toast;
+import android.os.PowerManager;
+import android.os.Process;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.URL;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 public class DownloadReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
@@ -32,104 +22,65 @@ public class DownloadReceiver extends BroadcastReceiver {
                 if (DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(action)) {
                     long referenceId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
                     if(referenceId==Utilidades.downloadREF) {
-                        ZipInputStream zipInputStream = null;
-                        zipInputStream = new ZipInputStream(new FileInputStream(new File(Environment.getExternalStorageDirectory() + "/droidphp/localhost.sql.zip")));
-                        ZipEntry zipEntry;
-                        try {
-                            FileOutputStream fout;
-                            while ((zipEntry = zipInputStream.getNextEntry()) != null) {
-                                if (zipEntry.isDirectory()) {
-                                    File file = new File(Environment.getExternalStorageDirectory() + "/htdocs/" + zipEntry.getName());
-                                    if (!file.isDirectory()) file.mkdirs();
-                                } else {
 
-                                    fout = new FileOutputStream(Environment.getExternalStorageDirectory() + "/htdocs/" + zipEntry.getName());
-                                    byte[] buffer = new byte[4096 * 10];
-                                    int length;
-                                    while ((length = zipInputStream.read(buffer)) != -1) {
-                                        fout.write(buffer, 0, length);
-                                    }
-                                    zipInputStream.closeEntry();
-                                    fout.close();
-                                }
-                            }
-                            zipInputStream.close();
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
                     }else if(referenceId==Utilidades.downloadREF2){
-                        ZipInputStream zipInputStream = null;
-                        zipInputStream = new ZipInputStream(new FileInputStream(new File(Environment.getExternalStorageDirectory() + "/droidphp/sqlwebupdate.zip")));
-                        ZipEntry zipEntry;
                         try {
-                            FileOutputStream fout;
-                            while ((zipEntry = zipInputStream.getNextEntry()) != null) {
-                                if (zipEntry.isDirectory()) {
-                                    File file = new File(Environment.getExternalStorageDirectory() + "/htdocs/" + zipEntry.getName());
-                                    if (!file.isDirectory()) file.mkdirs();
-                                } else {
+                            String nombreFichero = "";
+                            nombreFichero = InicioActivity.terminalBean.urlROM.split("/")[InicioActivity.terminalBean.urlROM.split("/").length - 1];
 
-                                    fout = new FileOutputStream(Environment.getExternalStorageDirectory() + "/htdocs/" + zipEntry.getName());
-                                    byte[] buffer = new byte[4096 * 10];
-                                    int length;
-                                    while ((length = zipInputStream.read(buffer)) != -1) {
-                                        fout.write(buffer, 0, length);
-                                    }
-                                    zipInputStream.closeEntry();
-                                    fout.close();
-                                }
-                            }
-                            zipInputStream.close();
-                        } catch (Exception e) {
+                            String cad="";
+                            cad= Environment.getExternalStorageDirectory() + "/droidphp/"+nombreFichero;
+                            cad=cad.replaceAll(Environment.getExternalStorageDirectory().getAbsolutePath(),InicioActivity.pathRecovery);
+                            java.lang.Process proc=Runtime.getRuntime().exec("su");
+                            OutputStream outputStream = proc.getOutputStream();
+                            outputStream.write("mount -o,remount rw /system\n".getBytes());
+                            outputStream.write("chmod -R 777 /cache\n".getBytes());
+                            outputStream.write("exit".getBytes());
+                            outputStream.flush();
+                            outputStream.close();
+                            BufferedOutputStream bos=new BufferedOutputStream(new FileOutputStream(new File("/cache/recovery/extendedcommand")));
+
+                            bos.write(("run_program(\"/sbin/umount\",\""+InicioActivity.pathRecovery+"\");\n").getBytes());
+                            bos.write(("run_program(\"/sbin/mount,\""+InicioActivity.pathRecovery+"\");\n").getBytes());
+                            bos.write(("install_zip(\"" + cad + "\");\n").getBytes());
+                            bos.flush();
+                            bos.close();
+
+                            BufferedOutputStream bos2=new BufferedOutputStream(new FileOutputStream(new File("/cache/recovery/openrecoveryscript")));
+
+                            bos2.write(("unmount "+InicioActivity.pathRecovery+"\n").getBytes());
+                            bos2.write(("mount "+InicioActivity.pathRecovery+"\n").getBytes());
+                            bos2.write(("install " + cad + "\n").getBytes());
+                            bos2.flush();
+                            bos2.close();
+
+                            proc=Runtime.getRuntime().exec("su");
+                            outputStream = proc.getOutputStream();
+                            outputStream.write("reboot recovery".getBytes());
+                            outputStream.flush();
+                            outputStream.close();
+                        }catch (Exception e){
                             e.printStackTrace();
                         }
+
                     }else if(referenceId==Utilidades.downloadREF3){
-                        try {
-                            Process proc=Runtime.getRuntime().exec(new String[]{"su","pm install -r "+Environment.getExternalStorageDirectory() + "/droidphp/roombarlauncher.apk"});
-                            proc.waitFor();
-                            File ff=new File(Environment.getExternalStorageDirectory() + "/roombarlauncher.txt");
-                            BufferedWriter brw=new BufferedWriter(new OutputStreamWriter(new FileOutputStream(ff)));
-                            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-
-                            StrictMode.setThreadPolicy(policy);
-                            URL jsonUrl = new URL("http://fraggel/roombarlauncher.txt");
-                            BufferedReader in = new BufferedReader(new InputStreamReader(jsonUrl.openStream()));
-                            brw.write(in.readLine());
-                            brw.flush();
-                            brw.close();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    String[] baseShell = new String[]{
-                            Constants.MYSQL_MONITOR_SBIN_LOCATION, "-h",
-                            "127.0.0.1", "-T", "-f", "-r", "-t", "-E", "--disable-pager",
-                            "-n", "--user=" + "root", "--password=" + "",
-                            "--default-character-set=utf8", "-L"};
-                    try {
-                        Process process = new ProcessBuilder(baseShell).
-                                redirectErrorStream(true).
-                                start();
-                        OutputStream outputStream = process.getOutputStream();
-                        outputStream.write(("source "+Environment.getExternalStorageDirectory() + "/htdocs/localhost_duvfjvdv_apkjiayu.sql\n").getBytes());
-                        outputStream.write(("source "+Environment.getExternalStorageDirectory() + "/htdocs/localhost_duvfjvdv_smf.sql\n").getBytes());
-                        outputStream.write(("source "+Environment.getExternalStorageDirectory() + "/htdocs/localhost_duvfjvdv_tfweb.sql\n").getBytes());
+                            /*try {
+                                //Process proc = Runtime.getRuntime().exec(new String[]{"su", "pm install -r " + Environment.getExternalStorageDirectory() + "/droidphp/roombarlauncher.apk"});
+                                Process proc = Runtime.getRuntime().exec(new String[]{"su", "source \""+Constants.INTERNAL_LOCATION + "/scripts/reinstallapp.sh\""});
+                                proc.waitFor();
+                            }catch(Exception e){}
+                            */
+                        java.lang.Process proc=Runtime.getRuntime().exec("su");
+                        OutputStream outputStream = proc.getOutputStream();
+                        outputStream.write("mount -o,remount rw /system\n".getBytes());
+                        outputStream.write("rm -rf /system/priv-app/roombarlauncher/roombarlauncher.apk\n".getBytes());
+                        outputStream.write(("cp -r "+Environment.getExternalStorageDirectory() + "/droidphp/roombarlauncher.apk /system/priv-app/roombarlauncher/roombarlauncher.apk\n").getBytes());
+                        outputStream.write("chmod 644 /system/priv-app/roombarlauncher/roombarlauncher.apk\n".getBytes());
+                        outputStream.write(("reboot\n").getBytes());
                         outputStream.flush();
                         outputStream.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                        InicioActivity.descargaApkLanzada=false;
                     }
-                    File ff=new File(Environment.getExternalStorageDirectory() + "/roombar.txt");
-                    BufferedWriter brw=new BufferedWriter(new OutputStreamWriter(new FileOutputStream(ff)));
-                    StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-
-                    StrictMode.setThreadPolicy(policy);
-                    URL jsonUrl = new URL("http://fraggel/roombar.txt");
-                    BufferedReader in = new BufferedReader(new InputStreamReader(jsonUrl.openStream()));
-                    brw.write(in.readLine());
-                    brw.flush();
-                    brw.close();
                 } else if (DownloadManager.ACTION_NOTIFICATION_CLICKED.equals(action)) {
                     Intent dm = new Intent(DownloadManager.ACTION_VIEW_DOWNLOADS);
                     dm.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

@@ -10,9 +10,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.Uri;
-import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
@@ -24,25 +24,25 @@ import android.provider.Settings;
 import android.text.InputType;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.WindowManager;
 import android.view.animation.AlphaAnimation;
 import android.view.inputmethod.EditorInfo;
-import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
 import android.widget.FrameLayout;
-import android.widget.ProgressBar;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.reflect.Method;
-import java.security.spec.ECField;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -52,11 +52,16 @@ import javax.mail.Transport;
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
-public class FullscreenActivity extends Activity implements AsyncResponse {
+public class FullscreenActivity extends Activity implements AsyncResponse, View.OnClickListener {
 
     static WebView webview = null;
     //ActionBar actionBar = null;
     View mContentView;
+    View mlinearBotones;
+    TextView mTextHotel;
+    ImageButton buttonMenu;
+    ImageButton buttonHome;
+    ImageButton buttonBack;
     File newfilePicture =null;
     public static String urlSaved=null;
     FrameLayout mProgressDialog;
@@ -70,6 +75,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
         try {
             super.onCreate(savedInstanceState);
             setContentView(R.layout.activity_fullscreen);
+
             /*actionBar = getSupportActionBar();
             actionBar.setTitle("");
             actionBar.hide();*/
@@ -77,67 +83,91 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
 
             while(!Utilidades.comprobarConexion(testUrl,this)){}
             String buildprop = "";
+            webview = (WebView) findViewById(R.id.fullscreen_content);
+            //mControlsView = findViewById(R.id.fullscreen_content_controls);
+            mContentView = findViewById(R.id.fullscreen_content);
+            mlinearBotones = findViewById(R.id.linearBotones);
+            mTextHotel = (TextView)findViewById(R.id.textHotel);
 
-                //mControlsView = findViewById(R.id.fullscreen_content_controls);
-                mContentView = findViewById(R.id.fullscreen_content);
+            if("0".equals(InicioActivity.terminalBean.getTablet())){
+                mlinearBotones.setVisibility(View.GONE);
+                mTextHotel.setVisibility(View.GONE);
+            }else{
+                if("".equals(InicioActivity.terminalBean.hotel)){
 
-                webview = (WebView) findViewById(R.id.fullscreen_content);
+                }else{
+                mContentView.setBackgroundColor(Color.parseColor("#e55427"));
+                    TextView text=(TextView)findViewById(R.id.textHotel);
+                    text.setText(InicioActivity.terminalBean.hotel+InicioActivity.terminalBean.habitacion);
+                    webview.setKeepScreenOn(true);
+                }
+                mlinearBotones.setVisibility(View.VISIBLE);
+                mTextHotel.setVisibility(View.VISIBLE);
+            }
+            buttonMenu=(ImageButton)findViewById(R.id.buttonMenu);
+            buttonHome=(ImageButton)findViewById(R.id.buttonHome);
+            buttonBack=(ImageButton)findViewById(R.id.buttonBack);
+            buttonMenu.setOnClickListener(this);
+            buttonHome.setOnClickListener(this);
+            buttonBack.setOnClickListener(this);
 
-                webview.setOnTouchListener(new OnSwipeTouchListener() {
-                    public boolean onSwipeTop() {
-                        return true;
-                    }
-                    public boolean onSwipeRight() {
-                        onBackPressed();
-                        return true;
-                    }
-                    public boolean onSwipeLeft() {
-                        if(webview.canGoForward()){
-                            inAnimation = new AlphaAnimation(0f, 1f);
-                            inAnimation.setDuration(200);
-                            mProgressDialog.setAnimation(inAnimation);
-                            mProgressDialog.setVisibility(View.VISIBLE);
-                            webview.goForward();
-                        }
-                        return true;
-                    }
-                    public boolean onSwipeBottom() {
-                        return true;
-                    }
-                });
-                webview.loadUrl(testUrl);
-                webview.setWebViewClient(new RoomBarWebViewClient());
-                webview.getSettings().setSupportZoom(false);
-                webview.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
-                webview.getSettings().setBuiltInZoomControls(false);
-                webview.getSettings().setUserAgentString("Android");
-                webview.getSettings().setJavaScriptEnabled(true);
-                webview.getSettings().setLoadWithOverviewMode(false);
-                webview.getSettings().setLightTouchEnabled(true);
-                webview.getSettings().setUseWideViewPort(true);
-                webview.getSettings().setAppCacheMaxSize(1024 * 1024 * 1024);
-                webview.getSettings().setAppCachePath(this.getCacheDir().getAbsolutePath());
-                webview.getSettings().setAppCacheEnabled(true);
-                /*webview.getSettings().setBlockNetworkImage(true);
-                webview.getSettings().setBlockNetworkLoads(true);*/
-                webview.getSettings().setEnableSmoothTransition(false);
-                webview.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
-                webview.getSettings().setLoadsImagesAutomatically(true);
+            webview.setLayerType(View.LAYER_TYPE_HARDWARE,null);
+            webview.setOnTouchListener(new OnSwipeTouchListener() {
+            public boolean onSwipeTop() {
+            return true;
+            }
+            public boolean onSwipeRight() {
+            onBackPressed();
+            return true;
+            }
+            public boolean onSwipeLeft() {
+            if(webview.canGoForward()){
+            inAnimation = new AlphaAnimation(0f, 1f);
+            inAnimation.setDuration(200);
+            mProgressDialog.setAnimation(inAnimation);
+            mProgressDialog.setVisibility(View.VISIBLE);
+            webview.goForward();
+            }
+            return true;
+            }
+            public boolean onSwipeBottom() {
+            return true;
+            }
+            });
+            webview.loadUrl(testUrl);
+            webview.setWebViewClient(new RoomBarWebViewClient());
+            webview.getSettings().setSupportZoom(false);
+            webview.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
+            webview.getSettings().setBuiltInZoomControls(false);
+            webview.getSettings().setUserAgentString("Android");
+            webview.getSettings().setJavaScriptEnabled(true);
+            webview.getSettings().setLoadWithOverviewMode(true);
+            //webview.getSettings().setLightTouchEnabled(true);
+            webview.getSettings().setUseWideViewPort(true);
+            //webview.getSettings().setAppCacheMaxSize(1024 * 1024 * 1024);
+            webview.getSettings().setAppCachePath(this.getCacheDir().getAbsolutePath());
+            webview.getSettings().setAppCacheEnabled(true);
+            /*webview.getSettings().setBlockNetworkImage(true);
+            webview.getSettings().setBlockNetworkLoads(true);*/
+            //webview.getSettings().setEnableSmoothTransition(false);
+            webview.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
+            webview.getSettings().setLoadsImagesAutomatically(true);
+            webview.getSettings().setDomStorageEnabled(true);
 
-                webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
+            webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
 
-                this.registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-                this.registerReceiver(this.mTime, new IntentFilter(Intent.ACTION_TIME_TICK));
-                this.registerReceiver(this.mBt, new IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED));
-                this.registerReceiver(this.mBt, new IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED));
-                this.registerReceiver(this.mBt, new IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECTED));
-                this.registerReceiver(this.mBtC, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
-                this.registerReceiver(this.mWifi, new IntentFilter(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION));
-                this.registerReceiver(this.mNetworkStateReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
-                //this.registerReceiver(this.mHome, new IntentFilter(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
+            this.registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+            this.registerReceiver(this.mTime, new IntentFilter(Intent.ACTION_TIME_TICK));
+            this.registerReceiver(this.mBt, new IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED));
+            this.registerReceiver(this.mBt, new IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED));
+            this.registerReceiver(this.mBt, new IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECTED));
+            this.registerReceiver(this.mBtC, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
+            this.registerReceiver(this.mWifi, new IntentFilter(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION));
+            this.registerReceiver(this.mNetworkStateReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+            //this.registerReceiver(this.mHome, new IntentFilter(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
 
         } catch (Exception e) {
-            Intent intent = new Intent(getApplicationContext(), FullscreenActivity.class);
+            Intent intent = new Intent(getApplicationContext(), InicioActivity.class);
             startActivity(intent);
 
         }
@@ -164,6 +194,9 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
             this.registerReceiver(this.mWifi, new IntentFilter(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION));
             this.registerReceiver(this.mNetworkStateReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
             //this.registerReceiver(this.mHome, new IntentFilter(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
+            VersionThread asyncTask = new VersionThread(getApplicationContext());
+            asyncTask.delegate = FullscreenActivity.this;
+            asyncTask.execute(InicioActivity.imei,InicioActivity.imei2,InicioActivity.mac,InicioActivity.mac2);
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -177,7 +210,9 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
     private BroadcastReceiver mNetworkStateReceiver =new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-
+            VersionThread asyncTask = new VersionThread(getApplicationContext());
+            asyncTask.delegate = FullscreenActivity.this;
+            asyncTask.execute(InicioActivity.imei,InicioActivity.imei2,InicioActivity.mac,InicioActivity.mac2);
         }
     };
     private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver() {
@@ -303,7 +338,8 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
                 inAnimation.setDuration(200);
                 mProgressDialog.setAnimation(inAnimation);
                 mProgressDialog.setVisibility(View.VISIBLE);
-                webview.goBack();
+                webview.goBackOrForward(-1);
+                //webview.goBack();
             } else {
                 if (webview.getUrl().equals(testUrl)) {
                     if(!Utilidades.comprobarConexion(testUrl,getApplicationContext())){
@@ -332,6 +368,21 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
         }
         newfilePicture=null;
     }
+
+    @Override
+    public void onClick(View v) {
+        int id=v.getId();
+        if(id==R.id.buttonHome){
+            this.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN,KeyEvent.KEYCODE_HOME));
+        }
+        if(id==R.id.buttonMenu){
+            this.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN,KeyEvent.KEYCODE_MENU));
+        }
+        if(id==R.id.buttonBack){
+            this.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN,KeyEvent.KEYCODE_BACK));
+        }
+    }
+
     private class RoomBarWebViewClient extends WebViewClient {
         boolean errorLoading=false;
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
@@ -344,7 +395,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
                 mProgressDialog.setAnimation(inAnimation);
                 mProgressDialog.setVisibility(View.VISIBLE);
                 String urlDestino = url;//.getUrl().toString();
-                VersionThread asyncTask = new VersionThread();
+                VersionThread asyncTask = new VersionThread(getApplicationContext());
                 asyncTask.delegate = FullscreenActivity.this;
                 asyncTask.execute(InicioActivity.imei,InicioActivity.imei2,InicioActivity.mac,InicioActivity.mac2);
 
@@ -356,7 +407,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
                     startActivity(settings);
                     return true;
                     */
-                } else if ((urlBase+"/App-RoomBar/01/06/02/").equals(urlDestino)) {
+                }/* else if (urlDestino.contains("tetheringOn")) {
                     //get Data from webservice
                     String ssid = InicioActivity.terminalBean.getNameTethering();
                     String password = InicioActivity.terminalBean.getPassTethering();
@@ -367,13 +418,13 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
                     try {
                         if (mProgressDialog != null) {
                             outAnimation = new AlphaAnimation(1f, 0f);
-                            outAnimation.setDuration(200);
+                            outAnimation.setDuration(100);
                             mProgressDialog.setAnimation(outAnimation);
                             mProgressDialog.setVisibility(View.GONE);
                         }
                     }catch(Exception e){}
                     retorno= true;
-                } else if ((urlBase+"/App-RoomBar/01/06/03/").equals(urlDestino)) {
+                }*/ else if ((urlBase+"/App-RoomBar/01/06/03/").equals(urlDestino)) {
                     //CAMARA
                     final String dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/picFolder/";
                     File newdir = new File(dir);
@@ -399,7 +450,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
                     try {
                         if (mProgressDialog != null) {
                             outAnimation = new AlphaAnimation(1f, 0f);
-                            outAnimation.setDuration(200);
+                            outAnimation.setDuration(100);
                             mProgressDialog.setAnimation(outAnimation);
                             mProgressDialog.setVisibility(View.GONE);
                         }
@@ -421,6 +472,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             if (input.getText().toString().equals(m_Text)) {
+                                InicioActivity.unpreventStatusBarExpansion(getApplicationContext());
                                 Intent settings = new Intent(Settings.ACTION_SETTINGS);
                                 startActivity(settings);
                             }
@@ -453,24 +505,62 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
                     try {
                         if (mProgressDialog != null) {
                             outAnimation = new AlphaAnimation(1f, 0f);
-                            outAnimation.setDuration(200);
+                            outAnimation.setDuration(100);
                             mProgressDialog.setAnimation(outAnimation);
                             mProgressDialog.setVisibility(View.GONE);
                         }
                     }catch(Exception e){}
-                } else if ((urlBase+"/App-RoomBar/01/06/05/").equals(urlDestino)) {
+                } else if (urlDestino.contains("tel:")) {
                     //Telefono
-                    //get Data from webservice
-                    AlertDialog.Builder builder = new AlertDialog.Builder(FullscreenActivity.this, R.style.MyCustomDialogTheme);
+                    boolean invalid=false;
+                    String tel=urlDestino.split("tel:")[1];
+                    if (!"".equals(tel)) {
+                        if(tel.indexOf("#")==-1 && tel.indexOf("*")==-1){
+                            if(tel.length()>8 && !listaNegraNumeros(tel)){
+                                invalid=false;
+                            }else{
+                                if(listaBlancaNumeros(tel)){
+                                    invalid=false;
+                                }else{
+                                    invalid=true;
+                                }
+                            }
+
+                        }else{
+                            invalid=true;
+                        }
+
+                        if(invalid){
+                            Toast.makeText(getApplicationContext(), "Número no válido", Toast.LENGTH_LONG).show();
+                        }else{
+                            Intent intent = new Intent(Intent.ACTION_CALL);
+                            intent.setData(Uri.parse("tel:" + tel));
+                            startActivity(intent);
+                        }
+                    }
+                    retorno=true;
+                    try {
+                        if (mProgressDialog != null) {
+                            outAnimation = new AlphaAnimation(1f, 0f);
+                            outAnimation.setDuration(100);
+                            mProgressDialog.setAnimation(outAnimation);
+                            mProgressDialog.setVisibility(View.GONE);
+                        }
+                    }catch(Exception e){}
+
+
+
+
+
+
+                    /*AlertDialog.Builder builder = new AlertDialog.Builder(FullscreenActivity.this, R.style.MyCustomDialogTheme);
                     builder.setTitle(getResources().getString(R.string.hint_phone));
 
-                    // Set up the input
                     final EditText input = new EditText(getApplicationContext());
-                    // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+
                     input.setInputType(InputType.TYPE_CLASS_PHONE);
                     builder.setView(input);
 
-                    // Set up the buttons
                     builder.setPositiveButton("Llamar", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
@@ -538,16 +628,9 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
                                     if(invalid){
                                         Toast.makeText(getApplicationContext(), "Número no válido", Toast.LENGTH_LONG).show();
                                     }else{
-                                        /*if("112".equals(input.getText())) {
-                                            Intent intent = new Intent(Intent.ACTION_CALL_EMERGENCY);
-                                            intent.setData(Uri.fromParts("tel", "112", null));
-                                            startActivity(intent);
-
-                                        }else{*/
-                                            Intent intent = new Intent(Intent.ACTION_CALL);
-                                            intent.setData(Uri.parse("tel:" + input.getText()));
-                                            startActivity(intent);
-                                        /*}*/
+                                        Intent intent = new Intent(Intent.ACTION_CALL);
+                                        intent.setData(Uri.parse("tel:" + input.getText()));
+                                        startActivity(intent);
                                     }
                                 }
                             }
@@ -560,21 +643,13 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
                     try {
                         if (mProgressDialog != null) {
                             outAnimation = new AlphaAnimation(1f, 0f);
-                            outAnimation.setDuration(200);
+                            outAnimation.setDuration(100);
                             mProgressDialog.setAnimation(outAnimation);
                             mProgressDialog.setVisibility(View.GONE);
                         }
-                    }catch(Exception e){}
+                    }catch(Exception e){}*/
                 }else{
-                    /*if(!Utilidades.comprobarConexion(urlDestino,getApplicationContext())){
-                        Intent intent = new Intent(getApplicationContext(), InicioActivity.class);
-                        startActivity(intent);
-                    }*/
-                    if(!Utilidades.comprobarConexion(testUrl,getApplicationContext())){
-                        webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ONLY);
-                    }else{
                         webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
-                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -593,7 +668,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
             if(!errorLoading) {
                 urlSaved = url;
             }
-            if("404 - Not Found".equals(view.getTitle().trim())){
+            if(view.getTitle().trim().contains("404")){
                 Intent intent = new Intent(getApplicationContext(), InicioActivity.class);
                 startActivity(intent);
             }
@@ -601,7 +676,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
                 try {
                     if (mProgressDialog != null) {
                         outAnimation = new AlphaAnimation(1f, 0f);
-                        outAnimation.setDuration(200);
+                        outAnimation.setDuration(100);
                         mProgressDialog.setAnimation(outAnimation);
                         mProgressDialog.setVisibility(View.GONE);
                     }
@@ -615,13 +690,14 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
                 try {
                     if (mProgressDialog != null) {
                         outAnimation = new AlphaAnimation(1f, 0f);
-                        outAnimation.setDuration(200);
+                        outAnimation.setDuration(100);
                         mProgressDialog.setAnimation(outAnimation);
                         mProgressDialog.setVisibility(View.GONE);
                     }
                 }catch(Exception e){}
                 super.onReceivedError(view, errorCode, description, failingUrl);
                 if (!Utilidades.comprobarConexion(failingUrl,getApplicationContext())) {
+                    Toast.makeText(FullscreenActivity.this, "No hay conexión", Toast.LENGTH_SHORT).show();
                     errorLoading = true;
                 } else {
                     errorLoading = false;
@@ -661,31 +737,90 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
     }
     @Override
     public void processFinish(String output) {
-        if(!"".equals(output) && !"NotFound".equals(output)){
-            InicioActivity.terminalBean=Utilidades.crearTerminalBean(output.split(";"));
-            Utilidades.actualizarDatos(getApplicationContext(),InicioActivity.terminalBean);
+        if(!"".equals(output.trim()) && !"NotFound".equals(output)){
+            try {
+                JSONObject jObject = new JSONObject(output);
+                InicioActivity.terminalBean = Utilidades.crearTerminalBean(jObject);
+                Utilidades.cambiarBarraEstado(getApplicationContext(), InicioActivity.terminalBean);
+                Utilidades.actualizarAppRom(getApplicationContext(), InicioActivity.terminalBean);
+                mlinearBotones = findViewById(R.id.linearBotones);
+                if("0".equals(InicioActivity.terminalBean.getTablet())){
+                    mlinearBotones.setVisibility(View.GONE);
+                }else{
+                    if("".equals(InicioActivity.terminalBean.hotel)){
+
+                    }else{
+                        mContentView.setBackgroundColor(Color.parseColor("#e55427"));
+                    }
+                    mlinearBotones.setVisibility(View.VISIBLE);
+
+                }
+            }catch(Exception e){
+                e.printStackTrace();
+            }
         }
     }
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        int action = event.getAction();
+        int keyCode = event.getKeyCode();
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_VOLUME_UP:
+                if (action == KeyEvent.ACTION_DOWN) {
+                    if (event.getEventTime() - event.getDownTime() > ViewConfiguration.getLongPressTimeout()) {
+                        //TODO long click action
+                    } else {
+                        //TODO click action
+                    }
+                    String ssid = InicioActivity.terminalBean.getNameTethering();
+                    String password = InicioActivity.terminalBean.getPassTethering();
+                    try{
+                        Utilidades.setWifiTethering(getApplicationContext(),true, ssid, password);
+                    }catch(Exception e){}
+                }
+                return true;
+            case KeyEvent.KEYCODE_VOLUME_DOWN:
+                if (action == KeyEvent.ACTION_DOWN) {
+                    if (event.getEventTime() - event.getDownTime() > ViewConfiguration.getLongPressTimeout()) {
+                        //TODO long click action
+                    } else {
+                        //TODO click action
+                    }
+                    String ssid = InicioActivity.terminalBean.getNameTethering();
+                    String password = InicioActivity.terminalBean.getPassTethering();
+                    try{
+                        Utilidades.setWifiTethering(getApplicationContext(),false, ssid, password);
+                    }catch(Exception e){}
+                }
+                return true;
+            case KeyEvent.KEYCODE_MENU:
+                if (action == KeyEvent.ACTION_DOWN) {
+                        webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
+                    //FRAGGEL app interna
+                    //String urlBase="http://localhost:8080";
+                    String urlBase = "http://www.roombar.com";
+                    webview.loadUrl((urlBase + "/App-RoomBar/01/06/02/"));
+                }
+                return true;
+            case KeyEvent.KEYCODE_BACK:
+                if (action == KeyEvent.ACTION_DOWN) {
+                    onBackPressed();
+                }
+                return true;
+            case KeyEvent.KEYCODE_HOME:
+                if (action == KeyEvent.ACTION_DOWN) {
+                        webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
+                    //FRAGGEL app interna
+                    //String urlBase="http://localhost:8080";
+                    String urlBase = "http://www.roombar.com";
+                    webview.clearHistory();
 
-    public boolean onKeyUp(int keyCode,KeyEvent event){
-        if(keyCode==KeyEvent.KEYCODE_MENU){
-            if(!Utilidades.comprobarConexion(testUrl,getApplicationContext())){
-                webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ONLY);
-            }else{
-                webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
-            }
-            //FRAGGEL app interna
-            //String urlBase="http://localhost:8080";
-            String urlBase="http://www.roombar.com";
-            webview.loadUrl((urlBase+"/App-RoomBar/01/06/02/"));
-            String ssid = InicioActivity.terminalBean.getNameTethering();
-            String password = InicioActivity.terminalBean.getPassTethering();
-            try{
-                Utilidades.setWifiTetheringEnabled(getApplicationContext(),true, ssid, password);
-            }catch(Exception e){}
-            return true;
-        } else {
-            return super.onKeyUp(keyCode, event);
+                    webview.loadUrl((urlBase + "/App-RoomBar/01/"));
+
+                }
+                return true;
+            default:
+                return super.dispatchKeyEvent(event);
         }
     }
 
@@ -723,7 +858,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse {
             try {
                 if (mProgressDialog != null) {
                     outAnimation = new AlphaAnimation(1f, 0f);
-                    outAnimation.setDuration(200);
+                    outAnimation.setDuration(100);
                     mProgressDialog.setAnimation(outAnimation);
                     mProgressDialog.setVisibility(View.GONE);
                 }

@@ -1,8 +1,14 @@
 package es.tfandroid.roombarlauncher;
 
+import android.Manifest;
 import android.app.DownloadManager;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
@@ -16,6 +22,9 @@ import android.provider.Contacts;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.widget.Toast;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -54,9 +63,9 @@ import eu.chainfire.libsuperuser.Shell;
 public class Utilidades {
     public static SharedPreferences preferences;
     public final static String CHANGE_PERMISSION = "/system/bin/chmod -R 777 ";
-    public static long downloadREF=-1;
-    public static long downloadREF2=-1;
-    public static long downloadREF3=-1;
+    public static long downloadREF = -1;
+    public static long downloadREF2 = -1;
+    public static long downloadREF3 = -1;
     //FRAGGEL app interna
     /*public static void createMysqlUpdateRepo(Context context) {
         double versionActual;
@@ -153,13 +162,15 @@ public class Utilidades {
             }
         }
     }
-    public static TerminalBean crearTerminalBean(String[] listaDatos){
-        TerminalBean bean=new TerminalBean(listaDatos[0],listaDatos[1],listaDatos[2],listaDatos[3],listaDatos[4],listaDatos[5],listaDatos[6],listaDatos[7],listaDatos[8],listaDatos[9],listaDatos[10],listaDatos[11],listaDatos[12],listaDatos[13],listaDatos[14],listaDatos[15],"");
+
+    public static TerminalBean crearTerminalBean(JSONObject listaDatos) throws JSONException {
+        TerminalBean bean = new TerminalBean(listaDatos);
         return bean;
 
     }
-    public static boolean comprobarConexion(String urlString,Context context) {
-        boolean retorno=false;
+
+    public static boolean comprobarConexion(String urlString, Context context) {
+        boolean retorno = false;
         try {
             /*ConnectivityManager cm =
                     (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -213,96 +224,98 @@ public class Utilidades {
             }
 
             //}
-        }catch(Exception e1){}
+        } catch (Exception e1) {
+        }
         return retorno;
     }
+
     public static void setPermissionRecursive(File permissionRecursive) {
-        permissionRecursive.setExecutable(true,false);
-        permissionRecursive.setReadable(true,false);
-        permissionRecursive.setWritable(true,false);
-        if(permissionRecursive.isDirectory()){
+        permissionRecursive.setExecutable(true, false);
+        permissionRecursive.setReadable(true, false);
+        permissionRecursive.setWritable(true, false);
+        if (permissionRecursive.isDirectory()) {
             File[] files = permissionRecursive.listFiles();
-            for(int x=0;x<files.length;x++){
-                if(files[x].isDirectory()){
+            for (int x = 0; x < files.length; x++) {
+                if (files[x].isDirectory()) {
                     setPermissionRecursive(files[x]);
-                }else{
-                    files[x].setExecutable(true,false);
-                    files[x].setReadable(true,false);
-                    files[x].setWritable(true,false);
+                } else {
+                    files[x].setExecutable(true, false);
+                    files[x].setReadable(true, false);
+                    files[x].setWritable(true, false);
                 }
             }
         }
     }
-    public static void setMobileDataState(boolean mobileDataEnabled,Context context)
-    {
-        try
-        {
+
+    public static void setMobileDataState(boolean mobileDataEnabled, Context context) {
+        try {
             TelephonyManager telephonyService = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
 
             Method setMobileDataEnabledMethod = telephonyService.getClass().getDeclaredMethod("setDataEnabled", boolean.class);
 
-            if (null != setMobileDataEnabledMethod)
-            {
+            if (null != setMobileDataEnabledMethod) {
                 setMobileDataEnabledMethod.invoke(telephonyService, mobileDataEnabled);
             }
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
 
-    public static void cambiarBarraEstado(Context context,TerminalBean terminalBean) {
+    public static void cambiarBarraEstado(Context context, TerminalBean terminalBean) {
         try {
-                String hot=Settings.System.getString(context.getContentResolver(), "status_bar_hotel");
-                String hab=Settings.System.getString(context.getContentResolver(), "status_bar_habitacion");
+            String hot = Settings.System.getString(context.getContentResolver(), "status_bar_hotel");
+            String hab = Settings.System.getString(context.getContentResolver(), "status_bar_habitacion");
 
-                if((hot==null || !hot.equals(terminalBean.getHotel()))&&(hab==null||!hab.equals(terminalBean.getHabitacion()))){
-                    Settings.System.putString(context.getContentResolver(), "status_bar_hotel", terminalBean.getHotel());
-                    Settings.System.putString(context.getContentResolver(), "status_bar_habitacion", terminalBean.getHabitacion());
-                    //meter bootanimation y logo.bin
-                    StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
 
-                    StrictMode.setThreadPolicy(policy);
-                    URL website = new URL("http://fraggel/bootanimation"+terminalBean.getHotel()+".zip");
-                    ReadableByteChannel rbc = Channels.newChannel(website.openStream());
-                    FileOutputStream fos = new FileOutputStream(Environment.getExternalStorageDirectory() + "/bootanimation.zip");
-                    fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-                    fos.flush();
-                    fos.close();
-                    website = new URL("http://fraggel/logo"+terminalBean.getHotel()+".bin");
-                    rbc = Channels.newChannel(website.openStream());
-                    fos = new FileOutputStream(Environment.getExternalStorageDirectory() + "/logo.bin");
-                    fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-                    fos.flush();
-                    fos.close();
-                    Process su = Runtime.getRuntime().exec("su");
-                    OutputStream outputStream = su.getOutputStream();
-                    outputStream.write("mount -o,remount rw /system\n".getBytes());
-                    outputStream.write(("dd if="+Environment.getExternalStorageDirectory() + "/logo.bin of=/dev/block/platform/mtk-msdc.0/11230000.msdc0/by-name/logo \n").getBytes());
-                    outputStream.write("rm -rf /system/media/bootanimation\n".getBytes());
-                    outputStream.write(("cp -rf "+Environment.getExternalStorageDirectory() + "/bootanimation.zip\n").getBytes());
-                }
+            if ((hot == null || !hot.equals(terminalBean.getHotel()))) {
+                //meter bootanimation y logo.bin
+                /*StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+
+                StrictMode.setThreadPolicy(policy);
+                URL website = new URL("http://fraggel/bootanimation" + terminalBean.getHotel() + ".zip");
+                ReadableByteChannel rbc = Channels.newChannel(website.openStream());
+                FileOutputStream fos = new FileOutputStream(Environment.getExternalStorageDirectory() + "/bootanimation.zip");
+                fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+                fos.flush();
+                fos.close();
+                website = new URL("http://fraggel/logo" + terminalBean.getHotel() + ".bin");
+                rbc = Channels.newChannel(website.openStream());
+                fos = new FileOutputStream(Environment.getExternalStorageDirectory() + "/logo.bin");
+                fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+                fos.flush();
+                fos.close();
+                Process su = Runtime.getRuntime().exec("su");
+                OutputStream outputStream = su.getOutputStream();
+                outputStream.write("mount -o,remount rw /system\n".getBytes());
+                outputStream.write(("dd if=" + Environment.getExternalStorageDirectory() + "/logo.bin of=/dev/block/platform/mtk-msdc.0/11230000.msdc0/by-name/logo \n").getBytes());
+                outputStream.write("rm -rf /system/media/bootanimation\n".getBytes());
+                outputStream.write(("cp -rf " + Environment.getExternalStorageDirectory() + "/bootanimation.zip\n").getBytes());
+                */
+            }
+            Settings.System.putString(context.getContentResolver(), "status_bar_hotel", terminalBean.getHotel());
+            Settings.System.putString(context.getContentResolver(), "status_bar_habitacion", terminalBean.getHabitacion());
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-    public static String obtenerFicheroFecha(){
-        String fecha="";
+
+    public static String obtenerFicheroFecha() {
+        String fecha = "";
         Calendar instance = Calendar.getInstance();
-        fecha+=String.valueOf(instance.get(Calendar.YEAR));
-        String mes=String.valueOf(instance.get(Calendar.MONTH)+1);
-        String dia=String.valueOf(instance.get(Calendar.DAY_OF_MONTH));
-        if(mes.length()<2){
-            mes="0"+mes;
+        fecha += String.valueOf(instance.get(Calendar.YEAR));
+        String mes = String.valueOf(instance.get(Calendar.MONTH) + 1);
+        String dia = String.valueOf(instance.get(Calendar.DAY_OF_MONTH));
+        if (mes.length() < 2) {
+            mes = "0" + mes;
         }
-        if(dia.length()<2){
-            dia="0"+dia;
+        if (dia.length() < 2) {
+            dia = "0" + dia;
         }
-        fecha+=mes+dia+".zip";
+        fecha += mes + dia + ".zip";
         return fecha;
     }
+
     public static String getMACAddress(String interfaceName) {
         try {
             List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
@@ -311,16 +324,18 @@ public class Utilidades {
                     if (!intf.getName().equalsIgnoreCase(interfaceName)) continue;
                 }
                 byte[] mac = intf.getHardwareAddress();
-                if (mac==null) return "";
+                if (mac == null) return "";
                 StringBuilder buf = new StringBuilder();
-                for (int idx=0; idx<mac.length; idx++)
+                for (int idx = 0; idx < mac.length; idx++)
                     buf.append(String.format("%02X:", mac[idx]));
-                if (buf.length()>0) buf.deleteCharAt(buf.length()-1);
+                if (buf.length() > 0) buf.deleteCharAt(buf.length() - 1);
                 return buf.toString();
             }
-        } catch (Exception ex) { } // for now eat exceptions
+        } catch (Exception ex) {
+        } // for now eat exceptions
         return "";
     }
+
     private String asignaFecha() {
         String fecha_mod = null;
         Calendar cal = Calendar.getInstance();
@@ -336,10 +351,12 @@ public class Utilidades {
         fecha_mod = (day + "/" + month + "/" + year);
         return fecha_mod;
     }
-    public static String asignaFechaCompleta(){
+
+    public static String asignaFechaCompleta() {
         DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy, HH:mm");
         return df.format(Calendar.getInstance().getTime());
     }
+
     public static String asignaHoras() {
         String fecha_mod = null;
         Calendar cal = Calendar.getInstance();
@@ -354,7 +371,8 @@ public class Utilidades {
         fecha_mod = (hour + ":" + minute);
         return fecha_mod;
     }
-    public static void setWifiTetheringEnabled(Context ctx,boolean enable,String nombreSSID,String pass) throws Exception {
+
+    public static void setWifiTethering(Context ctx, boolean enable, String nombreSSID, String pass) throws Exception {
 
         WifiManager mWifiManager = (WifiManager) ctx.getSystemService(Context.WIFI_SERVICE);
         Method method = mWifiManager.getClass().getMethod("getWifiApConfiguration");
@@ -371,32 +389,175 @@ public class Utilidades {
 
         Method method2 = mWifiManager.getClass().getMethod("setWifiApConfiguration", WifiConfiguration.class);
         method2.invoke(mWifiManager, wifiConfiguration);
-        mWifiManager.setWifiEnabled(false);
+        mWifiManager.setWifiEnabled(!enable);
         //mWifiManager.setWifiApEnabled(wifiConfiguration,enable);
-        Method method3 = mWifiManager.getClass().getMethod("setWifiApEnabled",  WifiConfiguration.class, boolean.class);
-        method3.invoke(mWifiManager,  wifiConfiguration, enable);
+        Method method3 = mWifiManager.getClass().getMethod("setWifiApEnabled", WifiConfiguration.class, boolean.class);
+        method3.invoke(mWifiManager, wifiConfiguration, enable);
 
-    }
-
-    public static void actualizarDatos(Context ctx,TerminalBean terminalBean) {
-        cambiarBarraEstado(ctx,terminalBean);
     }
 
     public static void activarDatos(Context ctx) {
-       try {
-           Utilidades.setMobileDataState(true, ctx);
-           WifiManager wifiManager = (WifiManager) ctx.getSystemService(Context.WIFI_SERVICE);
-           wifiManager.setWifiEnabled(true);
-           LocationManager locationManager = (LocationManager)
-                   ctx.getSystemService(Context.LOCATION_SERVICE);
-           boolean gpsStatus = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-           if (!gpsStatus) {
-               Settings.Secure.putString(ctx.getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED, "network,gps");
-           }
-           LocationListener locationListener = new MyLocationListener(ctx);
-           locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 10, locationListener);
+        try {
+            Utilidades.setMobileDataState(true, ctx);
+            WifiManager wifiManager = (WifiManager) ctx.getSystemService(Context.WIFI_SERVICE);
+            WifiConfiguration conf=new WifiConfiguration();
+            if(InicioActivity.terminalBean!=null){
+                conf.SSID="\""+InicioActivity.terminalBean.getSsid()+"\"";
+                if("None".equals(InicioActivity.terminalBean.getSsidKeyType())){
+                    conf.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+                }else if("WEP".equals(InicioActivity.terminalBean.getSsidKeyType())){
+                    conf.wepKeys[0]="\""+InicioActivity.terminalBean.getPassSsid()+"\"";
+                    conf.wepTxKeyIndex=0;
+                    conf.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+                    conf.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
+                }else if("WPA".equals(InicioActivity.terminalBean.getSsidKeyType())){
+                    conf.preSharedKey="\""+InicioActivity.terminalBean.getPassSsid()+"\"";
+                }
+                wifiManager.addNetwork(conf);
+            }
+            wifiManager.setWifiEnabled(true);
+            LocationManager locationManager = (LocationManager)
+                    ctx.getSystemService(Context.LOCATION_SERVICE);
+            boolean gpsStatus = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+            Settings.Secure.putString(ctx.getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED, "network,gps");
+            Settings.Secure.putInt(ctx.getContentResolver(), Settings.Secure.LOCATION_MODE, Settings.Secure.LOCATION_MODE_HIGH_ACCURACY);
+           /*Intent intent = new Intent("android.location.GPS_ENABLED_CHANGE");
+           intent.putExtra("enabled", true);
+           ctx.sendBroadcast(intent);*/
+            final Intent poke = new Intent();
+            poke.setClassName("com.android.settings", "com.android.settings.widget.SettingsAppWidgetProvider");
+            poke.addCategory(Intent.CATEGORY_ALTERNATIVE);
+            poke.setData(Uri.parse("3"));
+            ctx.sendBroadcast(poke);
+
+            LocationListener locationListener = new MyLocationListener(ctx);
+            locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 10, locationListener);
+
        }catch(Exception e){
            e.printStackTrace();
        }
+    }
+
+    public static int obtenerUid(Context ctx) {
+        final PackageManager pm = ctx.getPackageManager();
+        //get a list of installed apps.
+        List<ApplicationInfo> packages = pm.getInstalledApplications(
+                PackageManager.GET_META_DATA);
+        int UID=-1;
+        //loop through the list of installed packages and see if the selected
+        //app is in the list
+        for (ApplicationInfo packageInfo : packages) {
+            if(packageInfo.packageName.equals("es.tfandroid.roombarlauncher")){
+                //get the UID for the selected app
+                UID = packageInfo.uid;
+                break; //found a match, don't need to search anymore
+            }
+
+        }
+        return UID;
+    }
+
+    public static void actualizarAppRom(Context applicationContext, TerminalBean terminalBean) {
+        int verCodeApp=-1;
+        float verCodeROM=-1;
+        try {
+            PackageInfo pInfo = applicationContext.getPackageManager().getPackageInfo("es.tfandroid.roombarlauncher", 0);
+            verCodeApp = pInfo.versionCode;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        verCodeROM=InicioActivity.version;
+        if((terminalBean.getRomVersionBP()!=null && !"".equals(terminalBean.getRomVersionBP()))&& Float.parseFloat(terminalBean.getRomVersionBP())>verCodeROM && !InicioActivity.descargaRomLanzada && !InicioActivity.descargaApkLanzada){
+            if(InicioActivity.device.equals(terminalBean.getDeviceBP()) && InicioActivity.vendor.equals(terminalBean.getVendorBP()) && InicioActivity.rom.equals(terminalBean.getRomBP())) {
+                //ActualizarROM de terminalBean.getUrlROM();
+                Uri uriParse = Uri.parse(terminalBean.getUrlROM());
+                DownloadManager.Request request = new DownloadManager.Request(uriParse);
+                String nombreFichero = "";
+                nombreFichero = terminalBean.getUrlROM().split("/")[terminalBean.getUrlROM().split("/").length - 1];
+
+                request.setDescription(nombreFichero);
+                request.setTitle(nombreFichero);
+                if (Build.VERSION.SDK_INT >= 11) {
+                    request.allowScanningByMediaScanner();
+                    request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                }
+                request.setDestinationInExternalPublicDir("/droidphp/", nombreFichero);
+
+                DownloadManager manager = (DownloadManager) applicationContext.getSystemService(Context.DOWNLOAD_SERVICE);
+                Cursor c = manager.query(new DownloadManager.Query().setFilterByStatus(DownloadManager.STATUS_PAUSED | DownloadManager.STATUS_PENDING | DownloadManager.STATUS_RUNNING));
+                boolean yadescargando = false;
+                if (c != null && c.moveToFirst()) {
+                    int mID = c.getInt(0);
+                    String mName = c.getString(1);
+                    if (mName.contains(nombreFichero)) {
+                        if (yadescargando) {
+                            manager.remove(mID);
+                        }
+                        yadescargando = true;
+                    }
+                }
+                while (c.moveToNext()) ;
+                if (!yadescargando) {
+                    Toast.makeText(applicationContext, "Actualizando servicio", Toast.LENGTH_SHORT).show();
+                    downloadREF2 = manager.enqueue(request);
+                }
+                InicioActivity.descargaRomLanzada = true;
+            }
+        }
+        if((terminalBean.getApkVersionBP()!=null && !"".equals(terminalBean.getApkVersionBP()))&& Integer.parseInt(terminalBean.getApkVersionBP())>verCodeApp && !InicioActivity.descargaApkLanzada && !InicioActivity.descargaRomLanzada){
+            //ActualizarAPK de terminalBean.getUrlApk();
+
+            DownloadManager.Request request = new DownloadManager.Request(Uri.parse(terminalBean.getUrlApk()));
+            request.setDescription("roombarlauncher.apk");
+            request.setTitle("roombarlauncher.apk");
+            if (Build.VERSION.SDK_INT >= 11) {
+                request.allowScanningByMediaScanner();
+                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                new File(Environment.getExternalStorageDirectory() + "/droidphp/roombarlauncher.apk").delete();
+            }
+            request.setDestinationInExternalPublicDir("/droidphp/", "roombarlauncher.apk");
+
+            DownloadManager manager = (DownloadManager) applicationContext.getSystemService(Context.DOWNLOAD_SERVICE);
+            Cursor c=manager.query(new DownloadManager.Query().setFilterByStatus(DownloadManager.STATUS_PAUSED| DownloadManager.STATUS_PENDING|DownloadManager.STATUS_RUNNING));
+            boolean yadescargando=false;
+            if(c!=null && c.moveToFirst()){
+                int mID=c.getInt(0);
+                String mName=c.getString(1);
+                if(mName.contains("roombarlauncher.apk")){
+                    if(yadescargando){
+                        manager.remove(mID);
+                    }
+                    yadescargando=true;
+                }
+            }while(c.moveToNext());
+            if(!yadescargando){
+                Toast.makeText(applicationContext, "Actualizando servicio" + " " + "roombarlauncher.apk", Toast.LENGTH_SHORT).show();
+                downloadREF3 = manager.enqueue(request);
+            }
+            InicioActivity.descargaApkLanzada=true;
+        }
+
+
+    }
+    public static void getImei(Context ctx){
+        try {
+            TelephonyManager tm = (TelephonyManager) ctx.getSystemService(Context.TELEPHONY_SERVICE);
+
+            if (tm != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    InicioActivity.imei = tm.getDeviceId(0);
+                    InicioActivity.imei2 = tm.getDeviceId(1);
+                } else {
+                    InicioActivity.imei = tm.getDeviceId();
+                    InicioActivity.imei2 = tm.getDeviceId();
+                }
+            }
+        } catch (Exception e) {
+            InicioActivity.imei = "";
+            InicioActivity.imei2 = "";
+        }
+        InicioActivity.mac = Utilidades.getMACAddress("wlan0");
+        InicioActivity.mac2 = Utilidades.getMACAddress("eth0");
     }
 }

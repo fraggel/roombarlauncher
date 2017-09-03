@@ -32,7 +32,7 @@ public class BootReceiver extends BroadcastReceiver {
         busybox killall -3 mysqld
         busybox killall -SIGTERM mysqld
         busybox killall -SIGTERM php-cgitime.getRuntime().exec("/data/data/org.opendroidphp/scripts/server-sh.sh");
-        }catch(Exception e){}*/
+        }catch(Exception e){}
 
         AlarmManager alarm = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         Calendar calc = Calendar.getInstance();
@@ -44,6 +44,6 @@ public class BootReceiver extends BroadcastReceiver {
 
         Intent myIntent = new Intent(context, InicioActivity.class);
         myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(myIntent);
+        context.startActivity(myIntent);*/
     }
 }

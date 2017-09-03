@@ -1,6 +1,5 @@
 package es.tfandroid.roombarlauncher;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
@@ -8,29 +7,34 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.graphics.PixelFormat;
-import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.provider.Settings;
 import android.telephony.TelephonyManager;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.webkit.WebSettings;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.util.ArrayList;
+import java.io.FileReader;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -38,27 +42,33 @@ public class InicioActivity extends Activity implements AsyncResponse{
     public static final int OVERLAY_PERMISSION_REQ_CODE = 4545;
     protected customViewGroup blockingView = null;
     private SharedPreferences preferences;
+    private SharedPreferences.Editor edit;
+    public static LocationManager locationManager=null;
     public static TerminalBean terminalBean=null;
     public static String imei = "";
     public static String imei2 = "";
     public static String mac = "";
     public static String mac2 = "";
+    public static String device = "";
+    public static String vendor = "";
+    public static String rom = "";
+    public static float version;
+    public static String pathRecovery = "";
+    TextView textView=null;
     //FRAGGEL app interna
     //String testUrl="http://localhost:8080/index.php";
     String testUrl="http://www.roombar.com/App-RoomBar/01/";
     static long downloadREF = -1;
     static long downloadREF2 = -1;
-
+    static boolean descargaApkLanzada=false;
+    static boolean descargaRomLanzada=false;
+    static ViewGroup view;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_inicio);
         NotificationManager nm=(NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
         nm.cancelAll();
-        /*ActionBar actionBar = null;
-        actionBar = getSupportActionBar();
-        actionBar.setTitle("");
-        actionBar.hide();*/
         new File(Constants.SERVER_LOCATION).mkdirs();
         new File(Environment.getExternalStorageDirectory() + "/droidphp/conf/").mkdirs();
         new File(Environment.getExternalStorageDirectory() + "/droidphp/hosts/").mkdirs();
@@ -67,209 +77,152 @@ public class InicioActivity extends Activity implements AsyncResponse{
         new File(Environment.getExternalStorageDirectory() + "/droidphp/tmp/").mkdirs();
         new File(Environment.getExternalStorageDirectory() + "/droidphp/logs/").mkdirs();
         new File(Environment.getExternalStorageDirectory() + "/droidphp/sessions/").mkdirs();
+        this.registerReceiver(this.mNetworkStateReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
         Utilidades.activarDatos(getApplicationContext());
+        view= (ViewGroup) findViewById(android.R.id.content);
 
         //preventStatusBarExpansion(this);
-            try {
-                TelephonyManager tm = (TelephonyManager) getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
-
-                if (tm != null) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-                        imei = tm.getDeviceId(0);
-                    imei2 = tm.getDeviceId(1);
-                } else {
-                    imei = tm.getDeviceId();
-                    imei2 = tm.getDeviceId();
-                }
-
-            } catch (Exception e) {
-                imei = "";
-                imei2 = "";
-            }
-            mac = Utilidades.getMACAddress("wlan0");
-            mac2 = Utilidades.getMACAddress("eth0");
-/*
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        Utilidades.getImei(getApplicationContext());
 
         try {
-            this.registerReceiver(this.mWifi, new IntentFilter(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION));
-            this.registerReceiver(this.mNetworkStateReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
-        } catch (Exception e) {
-
-        }*/
-
-            preferences = PreferenceManager.
-                    getDefaultSharedPreferences(getApplicationContext());
-        /* try{
-                ZipInputStream zipInputStream = null;
-                try {
-                    zipInputStream = new ZipInputStream(getApplicationContext().getAssets().open("data.zip"));
-                    ZipEntry zipEntry;
-                    try {
-                        FileOutputStream fout;
-                        while ((zipEntry = zipInputStream.getNextEntry()) != null) {
-                            if (zipEntry.isDirectory()) {
-                                File file = new File(Constants.INTERNAL_LOCATION + "/"+zipEntry.getName());
-                                if (!file.isDirectory()) file.mkdirs();
-                            } else {
-
-                                fout = new FileOutputStream(Constants.INTERNAL_LOCATION + "/" + zipEntry.getName());
-                                byte[] buffer = new byte[4096 * 10];
-                                int length;
-                                while ((length = zipInputStream.read(buffer)) != -1) {
-                                    fout.write(buffer, 0, length);
-                                }
-                                zipInputStream.closeEntry();
-                                fout.close();
-                            }
-                        }
-                        zipInputStream.close();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }catch(Exception e){}
-             try {
-                 Utilidades.setPermissionRecursive(new File(Constants.INTERNAL_LOCATION));
-             } catch (Exception e) {
-                 e.printStackTrace();
-             }
-
-             //FRAGGEL app interna
-            boolean enableSU = preferences.getBoolean("run_as_root", false);
-            final String execName = preferences.getString("use_server_httpd", "lighttpd");
-            final String bindPort = preferences.getString("server_port", "8080");
-            String shell = "su";
-
-            List<String> command2 = Collections.unmodifiableList(new ArrayList<String>() {
-                {
-                    add(Utilidades.CHANGE_PERMISSION.concat(Constants.INTERNAL_LOCATION + "/scripts/server-sh.sh"));
-                    add(String.format("%s/scripts/server-sh.sh %s %s", Constants.INTERNAL_LOCATION, execName, bindPort));
+            BufferedReader br=null;
+            br = new BufferedReader(new FileReader(new File("/system/build.prop")));
+            String cadenaLeida = br.readLine();
+            while (cadenaLeida != null) {
+                if (cadenaLeida.trim().indexOf("ro.tfota.device") != -1) {
+                    device = cadenaLeida.trim().replaceAll(" ", "").replaceAll("ro.tfota.device=", "");
                 }
-            });
-            String command[] = command2.toArray(new String[command2.size()]);
-            List<String> res = Shell.run(shell, command, null, true);
-            for (String queryRes : res){
-                System.out.println(queryRes);
+                if (cadenaLeida.trim().indexOf("ro.tfota.vendor") != -1) {
+                    vendor = cadenaLeida.trim().replaceAll(" ", "").replaceAll("ro.tfota.vendor=", "");
+                }
+                if (cadenaLeida.trim().indexOf("ro.tfota.rom") != -1) {
+                    rom = cadenaLeida.trim().replaceAll(" ", "").replaceAll("ro.tfota.rom=", "");
+                }
+                if (cadenaLeida.trim().indexOf("ro.tfota.version") != -1) {
+                    version = Float.parseFloat(cadenaLeida.trim().replaceAll(" ", "").replaceAll("ro.tfota.version=", ""));
+                }
+                if (cadenaLeida.trim().indexOf("ro.tfota.recpath") != -1) {
+                    pathRecovery = cadenaLeida.trim().replaceAll(" ", "").replaceAll("ro.tfota.recpath=", "");
+                }
+                cadenaLeida = br.readLine();
             }
-             Utilidades.createMysqlUpdateRepo(getApplicationContext());
+        }catch(Exception e){}
+        textView=(TextView)findViewById(R.id.textView);
+        try{
+            File n=new File(Environment.getExternalStorageDirectory()+"/imei.log");
+            FileOutputStream fos=new FileOutputStream(n,true);
+            fos.write((imei+"\n"+imei2+"\n"+mac+"\n"+mac2+"\n"+device+"\n"+vendor+"\n"+rom+"\n"+version+"\n"+pathRecovery+"\n").getBytes());
+            fos.flush();
+            fos.close();
+        }catch(Exception e){
+            System.out.println(e.getMessage());
+        }
 
+        textView.setText(imei+"\n"+imei2+"\n"+mac+"\n"+mac2+"\n"+device+"\n"+vendor+"\n"+rom+"\n"+version+"\n"+pathRecovery);
+            preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        try {
+            ZipInputStream zipInputStream = null;
+            try {
+                zipInputStream = new ZipInputStream(getApplicationContext().getAssets().open("data.zip"));
+                ZipEntry zipEntry;
+                try {
+                    FileOutputStream fout;
+                    while ((zipEntry = zipInputStream.getNextEntry()) != null) {
+                        if (zipEntry.isDirectory()) {
+                            File file = new File(Constants.INTERNAL_LOCATION + "/" + zipEntry.getName());
+                            if (!file.isDirectory()) file.mkdirs();
+                        } else {
 
-         }catch(Exception e){
-             e.printStackTrace();
-         }*/
-        VersionThread asyncTask = new VersionThread();
+                            fout = new FileOutputStream(Constants.INTERNAL_LOCATION + "/" + zipEntry.getName());
+                            byte[] buffer = new byte[4096 * 10];
+                            int length;
+                            while ((length = zipInputStream.read(buffer)) != -1) {
+                                fout.write(buffer, 0, length);
+                            }
+                            zipInputStream.closeEntry();
+                            fout.close();
+                        }
+                    }
+                    zipInputStream.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } catch (Exception e) {
+            }
+            try {
+                Utilidades.setPermissionRecursive(new File(Constants.INTERNAL_LOCATION));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }catch(Exception e){}
+
+        //Toast.makeText(getApplicationContext(),"ROOMBAR",Toast.LENGTH_SHORT).show();
+        VersionThread asyncTask = new VersionThread(getApplicationContext());
         asyncTask.delegate = InicioActivity.this;
         asyncTask.execute(imei,imei2,mac,mac2);
-
     }
-    /*private BroadcastReceiver mNetworkStateReceiver =new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent.getExtras() != null) {
-                if (comprobarConexion("http://www.roombar.com/App-RoomBar/01/")) {
-                    Intent i = new Intent(context, FullscreenActivity.class);
-                    i.setAction(Intent.ACTION_MAIN);
-                    i.addCategory(Intent.CATEGORY_LAUNCHER);
-                    startActivity(i);
-                }
-            }
-        }
-    };*/
-    /*private BroadcastReceiver mNetworkStateReceiver =new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            VersionThread asyncTask = new VersionThread();
-            asyncTask.delegate = InicioActivity.this;
-            asyncTask.execute(imei,imei2,mac,mac2);
-        }
-    };*/
-    /*private final BroadcastReceiver mWifi = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            final String action = intent.getAction();
-            if (action.equals(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION)) {
-                WifiManager wifiMgr = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-
-                if (wifiMgr.isWifiEnabled()) { // Wi-Fi adapter is ON
-
-                    WifiInfo wifiInfo = wifiMgr.getConnectionInfo();
-
-                    if( wifiInfo.getNetworkId() == -1 ){
-                        //((TextView)findViewById(R.id.batteryLevel)).setText("Wifi not connected");
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        int action = event.getAction();
+        int keyCode = event.getKeyCode();
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_VOLUME_UP:
+                if (action == KeyEvent.ACTION_DOWN) {
+                    if (event.getEventTime() - event.getDownTime() > ViewConfiguration.getLongPressTimeout()) {
+                        //TODO long click action
+                    } else {
+                        //TODO click action
                     }
-                    VersionThread asyncTask = new VersionThread();
-                    asyncTask.delegate = InicioActivity.this;
-                    asyncTask.execute(imei,imei2,mac,mac2);
-                    //((TextView)findViewById(R.id.batteryLevel)).setText("Wifi on");
+                    try{
+                        String ssid = InicioActivity.terminalBean.getNameTethering();
+                        String password = InicioActivity.terminalBean.getPassTethering();
+                        Utilidades.setWifiTethering(getApplicationContext(),true, ssid, password);
+                    }catch(Exception e){}
                 }
-                else {
-                    //((TextView)findViewById(R.id.batteryLevel)).setText("Wifi off");
+                return true;
+            case KeyEvent.KEYCODE_VOLUME_DOWN:
+                if (action == KeyEvent.ACTION_DOWN) {
+                    if (event.getEventTime() - event.getDownTime() > ViewConfiguration.getLongPressTimeout()) {
+                        //TODO long click action
+                    } else {
+                        //TODO click action
+                    }
+                    try{
+                        String ssid = InicioActivity.terminalBean.getNameTethering();
+                        String password = InicioActivity.terminalBean.getPassTethering();
+
+                        Utilidades.setWifiTethering(getApplicationContext(),false, ssid, password);
+                    }catch(Exception e){}
                 }
-            }
-        }
-    };*/
-    public boolean onKeyUp(int keyCode,KeyEvent event){
-        if(keyCode==KeyEvent.KEYCODE_MENU){
-            return true;
-        }else {
-            return super.onKeyUp(keyCode, event);
+                return true;
+            case KeyEvent.KEYCODE_BACK:
+                if (action == KeyEvent.ACTION_DOWN) {
+                    onResume();
+                }
+                return true;
+            case KeyEvent.KEYCODE_MENU:
+                if (action == KeyEvent.ACTION_DOWN) {
+                    onResume();
+                }
+                return true;
+            case KeyEvent.KEYCODE_HOME:
+                if (action == KeyEvent.ACTION_DOWN) {
+                    onResume();
+                }
+                return true;
+            default:
+                return super.dispatchKeyEvent(event);
         }
     }
     @Override
     public void onResume(){
         try{
-            try{
-                TelephonyManager tm = (TelephonyManager) getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
-
-                if (tm != null) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-                        imei = tm.getDeviceId(0);
-                    imei2= tm.getDeviceId(1);
-                } else{
-                    imei=tm.getDeviceId();
-                    imei2=tm.getDeviceId();
-                }
-
-            } catch (Exception e) {
-                imei = "";
-                imei2="";
-            }
-            mac=Utilidades.getMACAddress("wlan0");
-            mac2=Utilidades.getMACAddress("eth0");
-            /*try {
-                Settings.System.putString(getContentResolver(), "status_bar_hotel", "aaaa");
-                Settings.System.putString(getContentResolver(), "status_bar_habitacion", "eeee");
-            }catch(Exception e){
-
-                e.printStackTrace();
-            }*/
-
-            //FRAGGEL app interna
-            /*try {
-                Utilidades.setPermissionRecursive(new File(Constants.INTERNAL_LOCATION));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            boolean enableSU = preferences.getBoolean("run_as_root", false);
-            final String execName = preferences.getString("use_server_httpd", "lighttpd");
-            final String bindPort = preferences.getString("server_port", "8080");
-            String shell = "su";
-
-            List<String> command2 = Collections.unmodifiableList(new ArrayList<String>() {
-                {
-                    add(Utilidades.CHANGE_PERMISSION.concat(Constants.INTERNAL_LOCATION + "/scripts/server-sh.sh"));
-                    add(String.format("%s/scripts/server-sh.sh %s %s", Constants.INTERNAL_LOCATION, execName, bindPort));
-                }
-            });
-            String command[] = command2.toArray(new String[command2.size()]);
-            List<String> res = Shell.run(shell, command, null, true);
-            for (String queryRes : res){
-                System.out.println(queryRes);
-            }*/
-            Intent intent = getIntent();
-            String action = intent.getAction();
+            Utilidades.getImei(getApplicationContext());
+            textView.setText(imei+"\n"+imei2+"\n"+mac+"\n"+mac2+"\n"+device+"\n"+vendor+"\n"+rom+"\n"+version+"\n"+pathRecovery);
+            this.registerReceiver(this.mNetworkStateReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
             Utilidades.activarDatos(getApplicationContext());
-            VersionThread asyncTask = new VersionThread();
+            VersionThread asyncTask = new VersionThread(getApplicationContext());
             asyncTask.delegate=InicioActivity.this;
             asyncTask.execute(imei,imei2,mac,mac2);
 
@@ -284,27 +237,27 @@ public class InicioActivity extends Activity implements AsyncResponse{
 
     @Override
     public void onSaveInstanceState(Bundle outState){
-        /*View decorWiew =getWindow().getDecorView();
-        int uiOptions=View.SYSTEM_UI_FLAG_FULLSCREEN;
-        decorWiew.setSystemUiVisibility(uiOptions);*/
         super.onSaveInstanceState(outState);
     }
     @Override
     public void processFinish(String output) {
-        if(!"".equals(output) && !"NotFound".equals(output)){
-            terminalBean=Utilidades.crearTerminalBean(output.split(";"));
-            Utilidades.actualizarDatos(getApplicationContext(),InicioActivity.terminalBean);
-            Intent intent = new Intent(getApplicationContext(), FullscreenActivity.class);
-            startActivity(intent);
+        if(!"".equals(output.trim()) && !"NotFound".equals(output)){
+            try {
+                JSONObject jObject = new JSONObject(output);
+                InicioActivity.terminalBean = Utilidades.crearTerminalBean(jObject);
+                Utilidades.cambiarBarraEstado(getApplicationContext(), InicioActivity.terminalBean);
+                Utilidades.actualizarAppRom(getApplicationContext(), InicioActivity.terminalBean);
+                Intent intent = new Intent(getApplicationContext(), FullscreenActivity.class);
+                startActivity(intent);
+            }catch(Exception e){}
         }
     }
     @Override
     protected void onDestroy() {
-        /*try{
-            unregisterReceiver(this.mWifi);
-            //unregisterReceiver(this.mNetworkStateReceiver);
+        try{
+            unregisterReceiver(this.mNetworkStateReceiver);
 
-        }catch(Exception e){}*/
+        }catch(Exception e){}
         if (blockingView!=null) {
             WindowManager manager = ((WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE));
             manager.removeView(blockingView);
@@ -321,7 +274,9 @@ public class InicioActivity extends Activity implements AsyncResponse{
                     .getSystemService(Context.WINDOW_SERVICE));
 
             Activity activity = (Activity) context;
+
             WindowManager.LayoutParams localLayoutParams = new WindowManager.LayoutParams();
+
             localLayoutParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_ERROR;
             localLayoutParams.gravity = Gravity.TOP;
             localLayoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
@@ -350,7 +305,29 @@ public class InicioActivity extends Activity implements AsyncResponse{
             e.printStackTrace();
         }
     }
+    public static void unpreventStatusBarExpansion(Context context) {
+        try {
 
+            WindowManager manager = ((WindowManager) context.getApplicationContext()
+                    .getSystemService(Context.WINDOW_SERVICE));
+
+            Activity activity = (Activity) context;
+
+            WindowManager.LayoutParams localLayoutParams = new WindowManager.LayoutParams();
+
+            customViewGroup view = new customViewGroup(context);
+
+            manager.addView(view, localLayoutParams);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+    public void onPause() {
+        super.onPause();
+        try {
+            this.unregisterReceiver(this.mNetworkStateReceiver);
+        }catch(Exception e){}
+    }
     public static class customViewGroup extends ViewGroup {
 
         public customViewGroup(Context context) {
@@ -405,5 +382,16 @@ public class InicioActivity extends Activity implements AsyncResponse{
         blockingView = new customViewGroup(this);
         manager.addView(blockingView, localLayoutParams);
     }
-
+    private BroadcastReceiver mNetworkStateReceiver =new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            try {
+                Utilidades.getImei(context);
+                textView.setText(imei+"\n"+imei2+"\n"+mac+"\n"+mac2+"\n"+device+"\n"+vendor+"\n"+rom+"\n"+version+"\n"+pathRecovery);
+                VersionThread asyncTask = new VersionThread(getApplicationContext());
+                asyncTask.delegate = InicioActivity.this;
+                asyncTask.execute(InicioActivity.imei, InicioActivity.imei2, InicioActivity.mac, InicioActivity.mac2);
+            }catch(Exception e){}
+        }
+    };
 }
