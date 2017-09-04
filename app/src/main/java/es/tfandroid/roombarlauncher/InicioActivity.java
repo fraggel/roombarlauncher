@@ -81,7 +81,7 @@ public class InicioActivity extends Activity implements AsyncResponse{
         Utilidades.activarDatos(getApplicationContext());
         view= (ViewGroup) findViewById(android.R.id.content);
 
-        //preventStatusBarExpansion(this);
+        preventStatusBarExpansion(this);
         DisplayMetrics metrics = getResources().getDisplayMetrics();
         Utilidades.getImei(getApplicationContext());
 

@@ -100,7 +100,7 @@ public class Utilidades {
         }catch(Exception e){}
     }*/
 
-    public static void downloadWeb(Context context) {
+    /*public static void downloadWeb(Context context) {
         BufferedWriter brw = null;
         DataOutputStream fos = null;
         DataInputStream stream = null;
@@ -161,7 +161,7 @@ public class Utilidades {
             } catch (Exception e) {
             }
         }
-    }
+    }*/
 
     public static TerminalBean crearTerminalBean(JSONObject listaDatos) throws JSONException {
         TerminalBean bean = new TerminalBean(listaDatos);
@@ -393,6 +393,7 @@ public class Utilidades {
         //mWifiManager.setWifiApEnabled(wifiConfiguration,enable);
         Method method3 = mWifiManager.getClass().getMethod("setWifiApEnabled", WifiConfiguration.class, boolean.class);
         method3.invoke(mWifiManager, wifiConfiguration, enable);
+        mWifiManager.saveConfiguration();
 
     }
 
@@ -402,20 +403,27 @@ public class Utilidades {
             WifiManager wifiManager = (WifiManager) ctx.getSystemService(Context.WIFI_SERVICE);
             WifiConfiguration conf=new WifiConfiguration();
             if(InicioActivity.terminalBean!=null){
-                conf.SSID="\""+InicioActivity.terminalBean.getSsid()+"\"";
-                if("None".equals(InicioActivity.terminalBean.getSsidKeyType())){
-                    conf.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
-                }else if("WEP".equals(InicioActivity.terminalBean.getSsidKeyType())){
-                    conf.wepKeys[0]="\""+InicioActivity.terminalBean.getPassSsid()+"\"";
-                    conf.wepTxKeyIndex=0;
-                    conf.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
-                    conf.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
-                }else if("WPA".equals(InicioActivity.terminalBean.getSsidKeyType())){
-                    conf.preSharedKey="\""+InicioActivity.terminalBean.getPassSsid()+"\"";
+                String[] splitSSID = InicioActivity.terminalBean.getSsid().split("---");
+                String[] splitSSIDKeyType = InicioActivity.terminalBean.getSsidKeyType().split("---");
+                String[] splitSSIDpass = InicioActivity.terminalBean.getPassSsid().split("---");
+                for(int x=0;x<splitSSID.length;x++) {
+                    conf.SSID = "\"" + splitSSID[x] + "\"";
+                    if ("None".equals(splitSSIDKeyType[x])) {
+                        conf.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+                    } else if ("WEP".equals(splitSSIDKeyType[x])) {
+                        conf.wepKeys[0] = "\"" + splitSSIDpass[x] + "\"";
+                        conf.wepTxKeyIndex = 0;
+                        conf.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+                        conf.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
+                    } else if ("WPA".equals(splitSSIDKeyType[x])) {
+                        conf.preSharedKey = "\"" + splitSSIDpass[x] + "\"";
+                    }
+                    wifiManager.addNetwork(conf);
+                    wifiManager.saveConfiguration();
                 }
-                wifiManager.addNetwork(conf);
             }
             wifiManager.setWifiEnabled(true);
+
             LocationManager locationManager = (LocationManager)
                     ctx.getSystemService(Context.LOCATION_SERVICE);
             boolean gpsStatus = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
