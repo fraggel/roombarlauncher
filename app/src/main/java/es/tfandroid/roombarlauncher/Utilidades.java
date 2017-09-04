@@ -406,7 +406,12 @@ public class Utilidades {
                 String[] splitSSID = InicioActivity.terminalBean.getSsid().split("---");
                 String[] splitSSIDKeyType = InicioActivity.terminalBean.getSsidKeyType().split("---");
                 String[] splitSSIDpass = InicioActivity.terminalBean.getPassSsid().split("---");
+                List<WifiConfiguration> configuredNetworks = wifiManager.getConfiguredNetworks();
+                for(int y=0;y<configuredNetworks.size();y++){
+                    wifiManager.removeNetwork(configuredNetworks.get(y).networkId);
+                }
                 for(int x=0;x<splitSSID.length;x++) {
+
                     conf.SSID = "\"" + splitSSID[x] + "\"";
                     if ("None".equals(splitSSIDKeyType[x])) {
                         conf.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
