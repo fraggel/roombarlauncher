@@ -23,7 +23,8 @@
         android:layout_width="match_parent"
         android:layout_height="100dp"
         android:id="@+id/linearBotones"
-        android:weightSum="3">
+        android:weightSum="3"
+        android:visibility="gone">
 
 
 

@@ -75,13 +75,16 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
         try {
             super.onCreate(savedInstanceState);
             setContentView(R.layout.activity_fullscreen);
-
+            String modo = getIntent().getStringExtra("modo");
+            if("noconectado".equals(modo)){
+                Toast.makeText(this,"Navegación sin conexión",Toast.LENGTH_LONG).show();
+            }
             /*actionBar = getSupportActionBar();
             actionBar.setTitle("");
             actionBar.hide();*/
 
 
-            while(!Utilidades.comprobarConexion(testUrl,this)){}
+            //while(!Utilidades.comprobarConexion(testUrl,this)){}
             String buildprop = "";
             webview = (WebView) findViewById(R.id.fullscreen_content);
             //mControlsView = findViewById(R.id.fullscreen_content_controls);
@@ -89,21 +92,39 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             mlinearBotones = findViewById(R.id.linearBotones);
             mTextHotel = (TextView)findViewById(R.id.textHotel);
 
-            if("0".equals(InicioActivity.terminalBean.getTablet())){
+            if(Utilidades.getDpi(getApplicationContext())>180){
                 mlinearBotones.setVisibility(View.GONE);
                 mTextHotel.setVisibility(View.GONE);
             }else{
-                if("".equals(InicioActivity.terminalBean.hotel)){
-
-                }else{
                 mContentView.setBackgroundColor(Color.parseColor("#e55427"));
-                    TextView text=(TextView)findViewById(R.id.textHotel);
-                    text.setText(InicioActivity.terminalBean.hotel+InicioActivity.terminalBean.habitacion);
-                    webview.setKeepScreenOn(true);
-                }
+                TextView text=(TextView)findViewById(R.id.textHotel);
+                text.setText(InicioActivity.terminalBean.hotel+InicioActivity.terminalBean.habitacion);
+                webview.setKeepScreenOn(true);
                 mlinearBotones.setVisibility(View.VISIBLE);
                 mTextHotel.setVisibility(View.VISIBLE);
             }
+            /*if(InicioActivity.terminalBean!=null){
+                if("0".equals(InicioActivity.terminalBean.getTablet())){
+                    mlinearBotones.setVisibility(View.GONE);
+                    mTextHotel.setVisibility(View.GONE);
+                }else{
+                    if("".equals(InicioActivity.terminalBean.hotel)){
+
+                    }else{
+                        mContentView.setBackgroundColor(Color.parseColor("#e55427"));
+                        TextView text=(TextView)findViewById(R.id.textHotel);
+                        text.setText(InicioActivity.terminalBean.hotel+InicioActivity.terminalBean.habitacion);
+                        webview.setKeepScreenOn(true);
+                    }
+                    mlinearBotones.setVisibility(View.VISIBLE);
+                    mTextHotel.setVisibility(View.VISIBLE);
+                }
+            }else{
+                if((InicioActivity.imei==null && InicioActivity.imei2==null)||("".equals(InicioActivity.imei.trim())&&("".equals(InicioActivity.imei2.trim())))){
+                    mlinearBotones.setVisibility(View.VISIBLE);
+                    mTextHotel.setVisibility(View.VISIBLE);
+                }
+            }*/
             buttonMenu=(ImageButton)findViewById(R.id.buttonMenu);
             buttonHome=(ImageButton)findViewById(R.id.buttonHome);
             buttonBack=(ImageButton)findViewById(R.id.buttonBack);
@@ -167,8 +188,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             //this.registerReceiver(this.mHome, new IntentFilter(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
 
         } catch (Exception e) {
-            Intent intent = new Intent(getApplicationContext(), InicioActivity.class);
-            startActivity(intent);
+            Utilidades.escribirLogErrores(e);
 
         }
     }
@@ -180,6 +200,12 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
         super.onPostCreate(savedInstanceState);
 
     }
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        onResume();
+    }
+
     @Override
     public void onResume(){
 
@@ -197,8 +223,10 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             VersionThread asyncTask = new VersionThread(getApplicationContext());
             asyncTask.delegate = FullscreenActivity.this;
             asyncTask.execute(InicioActivity.imei,InicioActivity.imei2,InicioActivity.mac,InicioActivity.mac2);
+            webview.reload();
+            webview.onResume();
         }catch(Exception e){
-            e.printStackTrace();
+            Utilidades.escribirLogErrores(e);
         }
     }
 
@@ -222,13 +250,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                 int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
 
             } catch (Exception e) {
-                try {
-                    PrintWriter bw = new PrintWriter(new FileWriter(Environment.getExternalStorageDirectory() + "/log.app"), true);
-                    e.printStackTrace(bw);
-                } catch (Exception e2) {
-
-                }
-
+                Utilidades.escribirLogErrores(e);
             }
         }
     };
@@ -238,13 +260,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             try {
                 //((TextView) findViewById(R.id.date)).setText(asignaHoras());
             } catch (Exception e) {
-                try {
-                    PrintWriter bw = new PrintWriter(new FileWriter(Environment.getExternalStorageDirectory() + "/log.app"));
-                    e.printStackTrace(bw);
-                } catch (Exception e2) {
-
-                }
-
+                Utilidades.escribirLogErrores(e);
             }
         }
     };
@@ -272,7 +288,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                 try {
 
                 }catch(Exception e){
-                    e.printStackTrace();
+                    Utilidades.escribirLogErrores(e);
                 }
 
             }
@@ -340,7 +356,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                 mProgressDialog.setVisibility(View.VISIBLE);
                 webview.goBackOrForward(-1);
                 //webview.goBack();
-            } else {
+            }/* else {
                 if (webview.getUrl().equals(testUrl)) {
                     if(!Utilidades.comprobarConexion(testUrl,getApplicationContext())){
                         Intent intent = new Intent(getApplicationContext(), InicioActivity.class);
@@ -351,9 +367,10 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     startActivity(intent);
                 }
 
-            }
+            }*/
         }
     }catch(Exception e){
+        Utilidades.escribirLogErrores(e);
         Intent intent = new Intent(getApplicationContext(), FullscreenActivity.class);
         startActivity(intent);
     }
@@ -364,7 +381,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
     protected void onActivityResult(int requestCode, int resultCode,Intent data){
         super.onActivityResult(requestCode, resultCode, data);
         if(newfilePicture!=null){
-            sendMail("fraggelillo666@gmail.com", "Prueba", "Adjuntamos imagen",newfilePicture.getAbsolutePath());
+            sendMail(data.getStringExtra("email"), data.getStringExtra("subject"), getResources().getString(R.string.msjEmail),newfilePicture.getAbsolutePath());
         }
         newfilePicture=null;
     }
@@ -438,6 +455,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     try {
                         newfilePicture.createNewFile();
                     } catch (IOException e) {
+                        Utilidades.escribirLogErrores(e);
                     }
 
                     Uri outputFileUri = Uri.fromFile(newfilePicture);
@@ -454,7 +472,9 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                             mProgressDialog.setAnimation(outAnimation);
                             mProgressDialog.setVisibility(View.GONE);
                         }
-                    }catch(Exception e){}
+                    }catch(Exception e){
+                        Utilidades.escribirLogErrores(e);
+                    }
                 } else if ((urlBase+"/App-RoomBar/01/06/04/").equals(urlDestino)) {
                     final String m_Text = InicioActivity.terminalBean.getPassSistema();
                     AlertDialog.Builder builder = new AlertDialog.Builder(FullscreenActivity.this, R.style.MyCustomDialogTheme);
@@ -509,7 +529,9 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                             mProgressDialog.setAnimation(outAnimation);
                             mProgressDialog.setVisibility(View.GONE);
                         }
-                    }catch(Exception e){}
+                    }catch(Exception e){
+                        Utilidades.escribirLogErrores(e);
+                    }
                 } else if (urlDestino.contains("tel:")) {
                     //Telefono
                     boolean invalid=false;
@@ -546,7 +568,9 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                             mProgressDialog.setAnimation(outAnimation);
                             mProgressDialog.setVisibility(View.GONE);
                         }
-                    }catch(Exception e){}
+                    }catch(Exception e){
+                        Utilidades.escribirLogErrores(e);
+                    }
 
 
 
@@ -652,11 +676,11 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                         webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
-                if(!Utilidades.comprobarConexion(testUrl,getApplicationContext())){
+                Utilidades.escribirLogErrores(e);
+                /*if(!Utilidades.comprobarConexion(testUrl,getApplicationContext())){
                     Intent intent = new Intent(getApplicationContext(), InicioActivity.class);
                     startActivity(intent);
-                }
+                }*/
             }
 
             return retorno;
@@ -668,10 +692,10 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             if(!errorLoading) {
                 urlSaved = url;
             }
-            if(view.getTitle().trim().contains("404")){
+            /*if(view.getTitle().trim().contains("404")){
                 Intent intent = new Intent(getApplicationContext(), InicioActivity.class);
                 startActivity(intent);
-            }
+            }*/
             try {
                 try {
                     if (mProgressDialog != null) {
@@ -680,8 +704,12 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                         mProgressDialog.setAnimation(outAnimation);
                         mProgressDialog.setVisibility(View.GONE);
                     }
-                }catch(Exception e){}
-            }catch(Exception e){}
+                }catch(Exception e){
+                    Utilidades.escribirLogErrores(e);
+                }
+            }catch(Exception e){
+                Utilidades.escribirLogErrores(e);
+            }
             errorLoading=false;
         }
         @Override
@@ -694,18 +722,27 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                         mProgressDialog.setAnimation(outAnimation);
                         mProgressDialog.setVisibility(View.GONE);
                     }
-                }catch(Exception e){}
+                }catch(Exception e){
+                    Utilidades.escribirLogErrores(e);
+                }
                 super.onReceivedError(view, errorCode, description, failingUrl);
-                if (!Utilidades.comprobarConexion(failingUrl,getApplicationContext())) {
-                    Toast.makeText(FullscreenActivity.this, "No hay conexión", Toast.LENGTH_SHORT).show();
-                    errorLoading = true;
-                } else {
-                    errorLoading = false;
+                if(testUrl.equals(failingUrl)){
+                    //Mostrar pantalla que diga que no se puede mostrar nada, que compruebe que hay conexión a internet,
+                    //Toast.makeText(FullscreenActivity.this, "No hay conexión para la pantalla inicial", Toast.LENGTH_SHORT).show();
+                }else{
+                    if (!Utilidades.comprobarConexion(failingUrl,getApplicationContext())) {
+                        Toast.makeText(FullscreenActivity.this, "No hay conexión", Toast.LENGTH_SHORT).show();
+                        errorLoading = true;
+                    } else {
+                        errorLoading = false;
+                    }
+                    if (!urlSaved.equals(failingUrl)) {
+                        view.loadUrl(urlSaved);
+                    }
                 }
-                if (!urlSaved.equals(failingUrl)) {
-                    view.loadUrl(urlSaved);
-                }
-            }catch(Exception e){}
+            }catch(Exception e){
+                Utilidades.escribirLogErrores(e);
+            }
             }
         }
     private boolean listaNegraNumeros(String s) {
@@ -743,8 +780,9 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                 InicioActivity.terminalBean = Utilidades.crearTerminalBean(jObject);
                 Utilidades.cambiarBarraEstado(getApplicationContext(), InicioActivity.terminalBean);
                 Utilidades.actualizarAppRom(getApplicationContext(), InicioActivity.terminalBean);
+                Utilidades.eliminarNotificacionies(getApplicationContext());
                 mlinearBotones = findViewById(R.id.linearBotones);
-                if("0".equals(InicioActivity.terminalBean.getTablet())){
+                /*if("0".equals(InicioActivity.terminalBean.getTablet())){
                     mlinearBotones.setVisibility(View.GONE);
                 }else{
                     if("".equals(InicioActivity.terminalBean.hotel)){
@@ -754,9 +792,20 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     }
                     mlinearBotones.setVisibility(View.VISIBLE);
 
+                }*/
+                if(Utilidades.getDpi(getApplicationContext())>180){
+                    mlinearBotones.setVisibility(View.GONE);
+                    mTextHotel.setVisibility(View.GONE);
+                }else{
+                    mContentView.setBackgroundColor(Color.parseColor("#e55427"));
+                    TextView text=(TextView)findViewById(R.id.textHotel);
+                    text.setText(InicioActivity.terminalBean.hotel+InicioActivity.terminalBean.habitacion);
+                    webview.setKeepScreenOn(true);
+                    mlinearBotones.setVisibility(View.VISIBLE);
+                    mTextHotel.setVisibility(View.VISIBLE);
                 }
             }catch(Exception e){
-                e.printStackTrace();
+                Utilidades.escribirLogErrores(e);
             }
         }
     }
@@ -776,7 +825,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     String password = InicioActivity.terminalBean.getPassTethering();
                     try{
                         Utilidades.setWifiTethering(getApplicationContext(),true, ssid, password);
-                    }catch(Exception e){}
+                    }catch(Exception e){Utilidades.escribirLogErrores(e);}
                 }
                 return true;
             case KeyEvent.KEYCODE_VOLUME_DOWN:
@@ -790,7 +839,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     String password = InicioActivity.terminalBean.getPassTethering();
                     try{
                         Utilidades.setWifiTethering(getApplicationContext(),false, ssid, password);
-                    }catch(Exception e){}
+                    }catch(Exception e){Utilidades.escribirLogErrores(e);}
                 }
                 return true;
             case KeyEvent.KEYCODE_MENU:
@@ -823,13 +872,23 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                 return super.dispatchKeyEvent(event);
         }
     }
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event){
+        if(keyCode==KeyEvent.KEYCODE_HOME){
+            String urlBase = "http://www.roombar.com";
+            webview.clearHistory();
 
+            webview.loadUrl((urlBase + "/App-RoomBar/01/"));
+
+        }
+        return true;
+    }
     private void sendMail(String email, String subject, String messageBody,String filename)
     {
         try {
            //ENVIO DE EMAIL
         } catch (Exception e) {
-            e.printStackTrace();
+            Utilidades.escribirLogErrores(e);
         }
     }
     public void onPause() {
@@ -862,7 +921,9 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     mProgressDialog.setAnimation(outAnimation);
                     mProgressDialog.setVisibility(View.GONE);
                 }
-            }catch(Exception e){}
+            }catch(Exception e){
+                Utilidades.escribirLogErrores(e);
+            }
         }
 
         @Override
@@ -870,7 +931,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             try {
                 Transport.send(messages[0]);
             } catch (MessagingException e) {
-                e.printStackTrace();
+                Utilidades.escribirLogErrores(e);
             }
             return null;
         }

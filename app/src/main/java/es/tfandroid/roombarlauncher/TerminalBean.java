@@ -36,6 +36,7 @@ public class TerminalBean {
     String ssid="";
     String passSsid="";
     String ssidKeyType="";
+    boolean logoPersonalizado;
 
     public TerminalBean(JSONObject jsonObject) throws JSONException {
         this.imei = jsonObject.getString("imei");
@@ -66,6 +67,7 @@ public class TerminalBean {
         this.ssid=jsonObject.getString("ssid");
         this.passSsid=jsonObject.getString("passSsid");
         this.ssidKeyType=jsonObject.getString("ssidKeyType");
+        this.logoPersonalizado="1".equals(jsonObject.getString("logoPersonalizado"))?true:false;
     }
 
     public String getImei() {
@@ -291,4 +293,13 @@ public class TerminalBean {
     public void setSsidKeyType(String ssidKeyType) {
         this.ssidKeyType = ssidKeyType;
     }
+
+    public boolean getLogoPersonalizado() {
+        return logoPersonalizado;
+    }
+
+    public void setLogoPersonalizado(boolean logoPersonalizado) {
+        this.logoPersonalizado = logoPersonalizado;
+    }
+
 }

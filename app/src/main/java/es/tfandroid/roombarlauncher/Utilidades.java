@@ -2,6 +2,7 @@ package es.tfandroid.roombarlauncher;
 
 import android.Manifest;
 import android.app.DownloadManager;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -16,11 +17,13 @@ import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Environment;
+import android.os.IBinder;
 import android.os.StrictMode;
 import android.preference.PreferenceManager;
 import android.provider.Contacts;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
+import android.util.DisplayMetrics;
 import android.widget.Toast;
 
 import org.json.JSONException;
@@ -35,6 +38,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.NetworkInterface;
@@ -66,6 +70,9 @@ public class Utilidades {
     public static long downloadREF = -1;
     public static long downloadREF2 = -1;
     public static long downloadREF3 = -1;
+    public static long downloadREF4 = -1;
+    public static long downloadREF5 = -1;
+    //public static long downloadREF6 = -1;
     //FRAGGEL app interna
     /*public static void createMysqlUpdateRepo(Context context) {
         double versionActual;
@@ -257,7 +264,7 @@ public class Utilidades {
                 setMobileDataEnabledMethod.invoke(telephonyService, mobileDataEnabled);
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Utilidades.escribirLogErrores(ex);
         }
     }
 
@@ -266,37 +273,51 @@ public class Utilidades {
             String hot = Settings.System.getString(context.getContentResolver(), "status_bar_hotel");
             String hab = Settings.System.getString(context.getContentResolver(), "status_bar_habitacion");
 
-
-            if ((hot == null || !hot.equals(terminalBean.getHotel()))) {
+            if ((hot == null || !hot.equals(terminalBean.getHotel())) && !InicioActivity.descargaApkLanzada && !InicioActivity.descargaRomLanzada && !InicioActivity.descargaLogosLanzada) {
                 //meter bootanimation y logo.bin
-                /*StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+                new File(Environment.getExternalStorageDirectory() + "/droidphp/logos.zip").delete();
+                Uri uriParse = Uri.parse("http://tfandroid.es/roombar/logos/logos" + terminalBean.getHotel().replaceAll(" ","") + ".zip");
+                DownloadManager.Request request = new DownloadManager.Request(uriParse);
+                String nombreFichero = "";
+                nombreFichero = "logos.zip";
 
-                StrictMode.setThreadPolicy(policy);
-                URL website = new URL("http://fraggel/bootanimation" + terminalBean.getHotel() + ".zip");
-                ReadableByteChannel rbc = Channels.newChannel(website.openStream());
-                FileOutputStream fos = new FileOutputStream(Environment.getExternalStorageDirectory() + "/bootanimation.zip");
-                fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-                fos.flush();
-                fos.close();
-                website = new URL("http://fraggel/logo" + terminalBean.getHotel() + ".bin");
-                rbc = Channels.newChannel(website.openStream());
-                fos = new FileOutputStream(Environment.getExternalStorageDirectory() + "/logo.bin");
-                fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-                fos.flush();
-                fos.close();
-                Process su = Runtime.getRuntime().exec("su");
-                OutputStream outputStream = su.getOutputStream();
-                outputStream.write("mount -o,remount rw /system\n".getBytes());
-                outputStream.write(("dd if=" + Environment.getExternalStorageDirectory() + "/logo.bin of=/dev/block/platform/mtk-msdc.0/11230000.msdc0/by-name/logo \n").getBytes());
-                outputStream.write("rm -rf /system/media/bootanimation\n".getBytes());
-                outputStream.write(("cp -rf " + Environment.getExternalStorageDirectory() + "/bootanimation.zip\n").getBytes());
-                */
+                request.setDescription(nombreFichero);
+                request.setTitle(nombreFichero);
+                if (Build.VERSION.SDK_INT >= 11) {
+                    request.allowScanningByMediaScanner();
+                    request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+
+                }
+                request.setDestinationInExternalPublicDir("/droidphp/", nombreFichero);
+
+                DownloadManager manager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
+                downloadREF4 = manager.enqueue(request);
+
+                if(terminalBean.getLogoPersonalizado()) {
+                    new File(Environment.getExternalStorageDirectory() + "/logo.png").delete();
+                    uriParse = Uri.parse("http://tfandroid.es/roombar/logos/logo" + terminalBean.getHotel().replaceAll(" ","") + ".png");
+                    request = new DownloadManager.Request(uriParse);
+                    nombreFichero = "logo.png";
+
+                    request.setDescription(nombreFichero);
+                    request.setTitle(nombreFichero);
+                    if (Build.VERSION.SDK_INT >= 11) {
+                        request.allowScanningByMediaScanner();
+                        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                    }
+                    request.setDestinationInExternalPublicDir("/", nombreFichero);
+
+                    manager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
+                    downloadREF5 = manager.enqueue(request);
+                }
+                InicioActivity.descargaLogosLanzada = true;
+                Settings.System.putString(context.getContentResolver(), "status_bar_hotel", terminalBean.getHotel());
+                Settings.System.putString(context.getContentResolver(), "status_bar_habitacion", terminalBean.getHabitacion());
+
             }
-            Settings.System.putString(context.getContentResolver(), "status_bar_hotel", terminalBean.getHotel());
-            Settings.System.putString(context.getContentResolver(), "status_bar_habitacion", terminalBean.getHabitacion());
 
         } catch (Exception e) {
-            e.printStackTrace();
+            Utilidades.escribirLogErrores(e);
         }
     }
 
@@ -332,6 +353,7 @@ public class Utilidades {
                 return buf.toString();
             }
         } catch (Exception ex) {
+            Utilidades.escribirLogErrores(ex);
         } // for now eat exceptions
         return "";
     }
@@ -407,11 +429,13 @@ public class Utilidades {
                 String[] splitSSIDKeyType = InicioActivity.terminalBean.getSsidKeyType().split("---");
                 String[] splitSSIDpass = InicioActivity.terminalBean.getPassSsid().split("---");
                 List<WifiConfiguration> configuredNetworks = wifiManager.getConfiguredNetworks();
-                for(int y=0;y<configuredNetworks.size();y++){
-                    wifiManager.removeNetwork(configuredNetworks.get(y).networkId);
-                }
-                for(int x=0;x<splitSSID.length;x++) {
 
+                for(int x=0;x<splitSSID.length;x++) {
+                    for(int y=0;y<configuredNetworks.size();y++){
+                        if(splitSSID[x].equals(configuredNetworks.get(y).SSID)) {
+                            wifiManager.removeNetwork(configuredNetworks.get(y).networkId);
+                        }
+                    }
                     conf.SSID = "\"" + splitSSID[x] + "\"";
                     if ("None".equals(splitSSIDKeyType[x])) {
                         conf.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
@@ -448,7 +472,7 @@ public class Utilidades {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 10, locationListener);
 
        }catch(Exception e){
-           e.printStackTrace();
+            Utilidades.escribirLogErrores(e);
        }
     }
 
@@ -478,22 +502,23 @@ public class Utilidades {
             PackageInfo pInfo = applicationContext.getPackageManager().getPackageInfo("es.tfandroid.roombarlauncher", 0);
             verCodeApp = pInfo.versionCode;
         } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+            Utilidades.escribirLogErrores(e);
         }
         verCodeROM=InicioActivity.version;
-        if((terminalBean.getRomVersionBP()!=null && !"".equals(terminalBean.getRomVersionBP()))&& Float.parseFloat(terminalBean.getRomVersionBP())>verCodeROM && !InicioActivity.descargaRomLanzada && !InicioActivity.descargaApkLanzada){
+        if((terminalBean.getRomVersionBP()!=null && !"".equals(terminalBean.getRomVersionBP()))&& Float.parseFloat(terminalBean.getRomVersionBP())>verCodeROM && !InicioActivity.descargaRomLanzada && !InicioActivity.descargaApkLanzada & !InicioActivity.descargaLogosLanzada){
             if(InicioActivity.device.equals(terminalBean.getDeviceBP()) && InicioActivity.vendor.equals(terminalBean.getVendorBP()) && InicioActivity.rom.equals(terminalBean.getRomBP())) {
                 //ActualizarROM de terminalBean.getUrlROM();
                 Uri uriParse = Uri.parse(terminalBean.getUrlROM());
                 DownloadManager.Request request = new DownloadManager.Request(uriParse);
-                String nombreFichero = "";
-                nombreFichero = terminalBean.getUrlROM().split("/")[terminalBean.getUrlROM().split("/").length - 1];
+                String nombreFichero = InicioActivity.terminalBean.urlROM.split("/")[InicioActivity.terminalBean.urlROM.split("/").length - 1];
+                nombreFichero.trim().replaceAll("\r\n","");
 
                 request.setDescription(nombreFichero);
                 request.setTitle(nombreFichero);
                 if (Build.VERSION.SDK_INT >= 11) {
                     request.allowScanningByMediaScanner();
                     request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                    new File(Environment.getExternalStorageDirectory() + "/droidphp/"+nombreFichero).delete();
                 }
                 request.setDestinationInExternalPublicDir("/droidphp/", nombreFichero);
 
@@ -518,7 +543,7 @@ public class Utilidades {
                 InicioActivity.descargaRomLanzada = true;
             }
         }
-        if((terminalBean.getApkVersionBP()!=null && !"".equals(terminalBean.getApkVersionBP()))&& Integer.parseInt(terminalBean.getApkVersionBP())>verCodeApp && !InicioActivity.descargaApkLanzada && !InicioActivity.descargaRomLanzada){
+        if((terminalBean.getApkVersionBP()!=null && !"".equals(terminalBean.getApkVersionBP()))&& Integer.parseInt(terminalBean.getApkVersionBP())>verCodeApp && !InicioActivity.descargaApkLanzada && !InicioActivity.descargaRomLanzada& !InicioActivity.descargaLogosLanzada){
             //ActualizarAPK de terminalBean.getUrlApk();
 
             DownloadManager.Request request = new DownloadManager.Request(Uri.parse(terminalBean.getUrlApk()));
@@ -567,10 +592,92 @@ public class Utilidades {
                 }
             }
         } catch (Exception e) {
+            Utilidades.escribirLogErrores(e);
             InicioActivity.imei = "";
             InicioActivity.imei2 = "";
         }
         InicioActivity.mac = Utilidades.getMACAddress("wlan0");
         InicioActivity.mac2 = Utilidades.getMACAddress("eth0");
+    }
+
+    public static void eliminarNotificacionies(Context applicationContext) {
+        NotificationManager nm=(NotificationManager)applicationContext.getSystemService(Context.NOTIFICATION_SERVICE);
+        nm.cancelAll();
+        try {
+            java.lang.Process proc = Runtime.getRuntime().exec("su");
+            OutputStream outputStream = proc.getOutputStream();
+            outputStream.write("settings put global heads_up_notifications_enabled 0\n".getBytes());
+            outputStream.flush();
+            outputStream.close();
+        }catch(Exception e){Utilidades.escribirLogErrores(e);}
+        try{
+            IBinder b = (IBinder) Class.forName("android.os.ServiceManager").getMethod("getService", new Class[] {
+                    String.class
+            }).invoke(null, new Object[] {
+                    "statusbar"
+            });
+
+            Object iFace = Class.forName("com.android.internal.statusbar.IStatusBarService$Stub").getDeclaredMethod("asInterface", new Class[] {
+                    IBinder.class
+            }).invoke(null, new Object[] {
+                    b
+            });
+
+            //iFace.getClass().getMethod("onClearAllNotifications", new Class[0]).invoke(iFace, (Object[]) null);
+        }catch(Exception e){Utilidades.escribirLogErrores(e);}
+        try{
+            java.lang.Process proc = Runtime.getRuntime().exec("su");
+            OutputStream outputStream = proc.getOutputStream();
+            outputStream.write("service call notification 1\n".getBytes());
+            outputStream.flush();
+            outputStream.close();
+        }catch(Exception e){Utilidades.escribirLogErrores(e);}
+    }
+
+    public static void borrarFicheros() {
+        try{
+            java.lang.Process proc = Runtime.getRuntime().exec("su");
+            OutputStream outputStream = proc.getOutputStream();
+            outputStream.write(("rm "+Environment.getExternalStorageDirectory() + "/droidphp/*\n").getBytes());
+            outputStream.flush();
+            outputStream.close();
+
+        File f=new File(Environment.getExternalStorageDirectory() + "/droidphp/");
+        File[] files = f.listFiles();
+        for(int x =0;x<files.length;x++){
+            if(files[x].isFile()){
+                files[x].delete();
+            }
+        }
+        }catch(Exception e){Utilidades.escribirLogErrores(e);}
+    }
+
+    public static void actualizarPermisos() {
+        try {
+            java.lang.Process proc = Runtime.getRuntime().exec("su");
+            OutputStream outputStream = proc.getOutputStream();
+            outputStream.write("mount -o,remount rw /system\n".getBytes());
+            outputStream.write("chmod -R 777 /cache\n".getBytes());
+            outputStream.write("exit".getBytes());
+            outputStream.flush();
+            outputStream.close();
+        }catch(Exception e){Utilidades.escribirLogErrores(e);}
+    }
+    public static int getDpi(Context context){
+        DisplayMetrics dm = context.getResources().getDisplayMetrics();
+        return dm.densityDpi;
+    }
+
+    public static void escribirLogErrores(Exception e) {
+        try {
+            File n = new File(Environment.getExternalStorageDirectory() + "/errores.log");
+            FileOutputStream fos = new FileOutputStream(n, true);
+            PrintWriter pw=new PrintWriter(fos);
+            e.printStackTrace(pw);
+            pw.flush();
+            pw.close();
+            fos.flush();
+            fos.close();
+        }catch(Exception e1){}
     }
 }

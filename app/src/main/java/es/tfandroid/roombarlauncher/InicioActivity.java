@@ -12,10 +12,13 @@ import android.content.pm.PackageManager;
 import android.graphics.PixelFormat;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.service.notification.StatusBarNotification;
 import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -26,6 +29,7 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.webkit.WebSettings;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,6 +39,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.PrintWriter;
+import java.net.URI;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -54,21 +62,29 @@ public class InicioActivity extends Activity implements AsyncResponse{
     public static String rom = "";
     public static float version;
     public static String pathRecovery = "";
+    Handler handler = new Handler();
     TextView textView=null;
+    ImageView imageView=null;
     //FRAGGEL app interna
     //String testUrl="http://localhost:8080/index.php";
     String testUrl="http://www.roombar.com/App-RoomBar/01/";
     static long downloadREF = -1;
     static long downloadREF2 = -1;
+    static long downloadREF3 = -1;
+    static long downloadREF4 = -1;
     static boolean descargaApkLanzada=false;
     static boolean descargaRomLanzada=false;
+    static boolean descargaLogosLanzada=false;
+    static boolean descargaLogoFinalizada=false;
+    static boolean descargaLogoPersonalizado=false;
+    static int verCodeApp;
     static ViewGroup view;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_inicio);
-        NotificationManager nm=(NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
-        nm.cancelAll();
+        Utilidades.eliminarNotificacionies(getApplicationContext());
+        Utilidades.actualizarPermisos();
         new File(Constants.SERVER_LOCATION).mkdirs();
         new File(Environment.getExternalStorageDirectory() + "/droidphp/conf/").mkdirs();
         new File(Environment.getExternalStorageDirectory() + "/droidphp/hosts/").mkdirs();
@@ -77,10 +93,16 @@ public class InicioActivity extends Activity implements AsyncResponse{
         new File(Environment.getExternalStorageDirectory() + "/droidphp/tmp/").mkdirs();
         new File(Environment.getExternalStorageDirectory() + "/droidphp/logs/").mkdirs();
         new File(Environment.getExternalStorageDirectory() + "/droidphp/sessions/").mkdirs();
+        Utilidades.borrarFicheros();
         this.registerReceiver(this.mNetworkStateReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
         Utilidades.activarDatos(getApplicationContext());
         view= (ViewGroup) findViewById(android.R.id.content);
-
+        imageView=(ImageView)findViewById(R.id.imageView);
+        if(!new File(Environment.getExternalStorageDirectory() + "/logo.png").exists()){
+            imageView.setImageResource(R.drawable.inicio);
+        }else {
+            imageView.setImageURI(Uri.fromFile(new File(Environment.getExternalStorageDirectory() + "/logo.png")));
+        }
         preventStatusBarExpansion(this);
         DisplayMetrics metrics = getResources().getDisplayMetrics();
         Utilidades.getImei(getApplicationContext());
@@ -107,19 +129,17 @@ public class InicioActivity extends Activity implements AsyncResponse{
                 }
                 cadenaLeida = br.readLine();
             }
-        }catch(Exception e){}
-        textView=(TextView)findViewById(R.id.textView);
-        try{
-            File n=new File(Environment.getExternalStorageDirectory()+"/imei.log");
-            FileOutputStream fos=new FileOutputStream(n,true);
-            fos.write((imei+"\n"+imei2+"\n"+mac+"\n"+mac2+"\n"+device+"\n"+vendor+"\n"+rom+"\n"+version+"\n"+pathRecovery+"\n").getBytes());
-            fos.flush();
-            fos.close();
         }catch(Exception e){
-            System.out.println(e.getMessage());
+            Utilidades.escribirLogErrores(e);
         }
-
-        textView.setText(imei+"\n"+imei2+"\n"+mac+"\n"+mac2+"\n"+device+"\n"+vendor+"\n"+rom+"\n"+version+"\n"+pathRecovery);
+        textView=(TextView)findViewById(R.id.textView);
+        try {
+            PackageInfo pInfo = getApplicationContext().getPackageManager().getPackageInfo("es.tfandroid.roombarlauncher", 0);
+            verCodeApp = pInfo.versionCode;
+        } catch (PackageManager.NameNotFoundException e) {
+            Utilidades.escribirLogErrores(e);
+        }
+        textView.setText(rom+" "+version+" apk "+verCodeApp);
             preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         try {
             ZipInputStream zipInputStream = null;
@@ -146,21 +166,32 @@ public class InicioActivity extends Activity implements AsyncResponse{
                     }
                     zipInputStream.close();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    Utilidades.escribirLogErrores(e);
                 }
             } catch (Exception e) {
+                Utilidades.escribirLogErrores(e);
             }
             try {
                 Utilidades.setPermissionRecursive(new File(Constants.INTERNAL_LOCATION));
             } catch (Exception e) {
-                e.printStackTrace();
+                Utilidades.escribirLogErrores(e);
             }
-        }catch(Exception e){}
+        }catch(Exception e){
+            Utilidades.escribirLogErrores(e);
+        }
 
         //Toast.makeText(getApplicationContext(),"ROOMBAR",Toast.LENGTH_SHORT).show();
         VersionThread asyncTask = new VersionThread(getApplicationContext());
         asyncTask.delegate = InicioActivity.this;
         asyncTask.execute(imei,imei2,mac,mac2);
+    }
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event){
+        if(keyCode==KeyEvent.KEYCODE_HOME){
+            Intent intent = new Intent(getApplicationContext(), FullscreenActivity.class);
+            startActivity(intent);
+        }
+        return true;
     }
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
@@ -175,10 +206,13 @@ public class InicioActivity extends Activity implements AsyncResponse{
                         //TODO click action
                     }
                     try{
+                        Toast.makeText(getApplicationContext(),"Habilitando Tethering",Toast.LENGTH_SHORT).show();
                         String ssid = InicioActivity.terminalBean.getNameTethering();
                         String password = InicioActivity.terminalBean.getPassTethering();
                         Utilidades.setWifiTethering(getApplicationContext(),true, ssid, password);
-                    }catch(Exception e){}
+                    }catch(Exception e){
+                        Utilidades.escribirLogErrores(e);
+                    }
                 }
                 return true;
             case KeyEvent.KEYCODE_VOLUME_DOWN:
@@ -189,11 +223,14 @@ public class InicioActivity extends Activity implements AsyncResponse{
                         //TODO click action
                     }
                     try{
+                        Toast.makeText(getApplicationContext(),"Deshabilitando Tethering",Toast.LENGTH_SHORT).show();
                         String ssid = InicioActivity.terminalBean.getNameTethering();
                         String password = InicioActivity.terminalBean.getPassTethering();
-
                         Utilidades.setWifiTethering(getApplicationContext(),false, ssid, password);
-                    }catch(Exception e){}
+
+                    }catch(Exception e){
+                        Utilidades.escribirLogErrores(e);
+                    }
                 }
                 return true;
             case KeyEvent.KEYCODE_BACK:
@@ -218,21 +255,30 @@ public class InicioActivity extends Activity implements AsyncResponse{
     @Override
     public void onResume(){
         try{
+            if(!new File(Environment.getExternalStorageDirectory() + "/logo.png").exists()){
+                imageView.setImageResource(R.drawable.inicio);
+            }else {
+                imageView.setImageURI(Uri.fromFile(new File(Environment.getExternalStorageDirectory() + "/logo.png")));
+            }
             Utilidades.getImei(getApplicationContext());
-            textView.setText(imei+"\n"+imei2+"\n"+mac+"\n"+mac2+"\n"+device+"\n"+vendor+"\n"+rom+"\n"+version+"\n"+pathRecovery);
+            textView.setText(rom+" "+version+" apk "+verCodeApp);
             this.registerReceiver(this.mNetworkStateReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
             Utilidades.activarDatos(getApplicationContext());
             VersionThread asyncTask = new VersionThread(getApplicationContext());
             asyncTask.delegate=InicioActivity.this;
             asyncTask.execute(imei,imei2,mac,mac2);
-
         }catch(Exception e){
-            e.printStackTrace();
+            Utilidades.escribirLogErrores(e);
         }
 
         super.onResume();
     }
 
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        //onResume();
+    }
 
 
     @Override
@@ -243,21 +289,30 @@ public class InicioActivity extends Activity implements AsyncResponse{
     public void processFinish(String output) {
         if(!"".equals(output.trim()) && !"NotFound".equals(output)){
             try {
+                handler.removeCallbacks(runnable);
                 JSONObject jObject = new JSONObject(output);
                 InicioActivity.terminalBean = Utilidades.crearTerminalBean(jObject);
                 Utilidades.cambiarBarraEstado(getApplicationContext(), InicioActivity.terminalBean);
                 Utilidades.actualizarAppRom(getApplicationContext(), InicioActivity.terminalBean);
                 Intent intent = new Intent(getApplicationContext(), FullscreenActivity.class);
                 startActivity(intent);
-            }catch(Exception e){}
+            }catch(Exception e){
+                Utilidades.escribirLogErrores(e);
+            }
+
+        }else {
+            handler.postDelayed(runnable, 15000);
         }
+
     }
     @Override
     protected void onDestroy() {
         try{
             unregisterReceiver(this.mNetworkStateReceiver);
 
-        }catch(Exception e){}
+        }catch(Exception e){
+            Utilidades.escribirLogErrores(e);
+        }
         if (blockingView!=null) {
             WindowManager manager = ((WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE));
             manager.removeView(blockingView);
@@ -302,7 +357,7 @@ public class InicioActivity extends Activity implements AsyncResponse{
 
             manager.addView(view, localLayoutParams);
         }catch(Exception e){
-            e.printStackTrace();
+            Utilidades.escribirLogErrores(e);
         }
     }
     public static void unpreventStatusBarExpansion(Context context) {
@@ -319,7 +374,7 @@ public class InicioActivity extends Activity implements AsyncResponse{
 
             manager.addView(view, localLayoutParams);
         }catch(Exception e){
-            e.printStackTrace();
+            Utilidades.escribirLogErrores(e);
         }
     }
     public void onPause() {
@@ -382,16 +437,25 @@ public class InicioActivity extends Activity implements AsyncResponse{
         blockingView = new customViewGroup(this);
         manager.addView(blockingView, localLayoutParams);
     }
+    private Runnable runnable=new Runnable() {
+        public void run() {
+            Intent i3 = new Intent(getApplicationContext(), FullscreenActivity.class);
+            i3.putExtra("modo", "noconectado");
+            startActivity(i3);
+        }
+    };
     private BroadcastReceiver mNetworkStateReceiver =new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             try {
                 Utilidades.getImei(context);
-                textView.setText(imei+"\n"+imei2+"\n"+mac+"\n"+mac2+"\n"+device+"\n"+vendor+"\n"+rom+"\n"+version+"\n"+pathRecovery);
+                textView.setText(rom+" "+version+" apk "+verCodeApp);
                 VersionThread asyncTask = new VersionThread(getApplicationContext());
                 asyncTask.delegate = InicioActivity.this;
                 asyncTask.execute(InicioActivity.imei, InicioActivity.imei2, InicioActivity.mac, InicioActivity.mac2);
-            }catch(Exception e){}
+            }catch(Exception e){
+                Utilidades.escribirLogErrores(e);
+            }
         }
     };
 }
