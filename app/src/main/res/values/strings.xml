@@ -7,4 +7,5 @@
     <string name="msjEmail">Imagen Adjunta</string>
     <string name="hint_email">Insert email</string>
     <string name="subject_Email">Roombar Picture</string>
+    <string name="hint_data_consum">Wifi is not connected, if you want to send the Picture you will consume %1$s of your daily qouta</string>
 </resources>

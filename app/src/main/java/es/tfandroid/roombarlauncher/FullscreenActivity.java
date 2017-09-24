@@ -369,6 +369,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     if (wifiInfo.getNetworkId() == -1) {
                         //((TextView)findViewById(R.id.batteryLevel)).setText("Wifi not connected");
                     }
+                    Utilidades.enviarEmailsEncolados(getApplicationContext());
                     //((TextView)findViewById(R.id.batteryLevel)).setText("Wifi on");
                     //Utilidades.recuentoMB(false);
                 } else {
@@ -420,6 +421,10 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
         super.onActivityResult(requestCode, resultCode, data);
         if (newfilePicture != null &&requestCode==0 && resultCode==-1)  {
             Utilidades.showDialogCamera(this,newfilePicture,"");
+        }else{
+            try {
+                newfilePicture.delete();
+            }catch(Exception e){}
         }
         try {
             if (mProgressDialog != null) {
@@ -885,6 +890,9 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                 Utilidades.cambiarBarraEstado(getApplicationContext(), InicioActivity.terminalBean);
                 Utilidades.actualizarAppRom(getApplicationContext(), InicioActivity.terminalBean);
                 Utilidades.eliminarNotificacionies(getApplicationContext());
+                if(Utilidades.checkWifiOnAndConnected(getApplicationContext())){
+                    Utilidades.enviarEmailsEncolados(getApplicationContext());
+                }
                 mlinearBotones = findViewById(R.id.linearBotones);
                 /*if("0".equals(InicioActivity.terminalBean.getTablet())){
                     mlinearBotones.setVisibility(View.GONE);
@@ -926,11 +934,12 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     } else {
                         //TODO click action
                     }
-                    String ssid = InicioActivity.terminalBean.getNameTethering();
-                    String password = InicioActivity.terminalBean.getPassTethering();
-                    try {
-                        Utilidades.setWifiTethering(getApplicationContext(), true, ssid, password);
-                    } catch (Exception e) {
+                    try{
+                        Toast.makeText(getApplicationContext(),"Habilitando Tethering",Toast.LENGTH_SHORT).show();
+                        String ssid = InicioActivity.terminalBean.getNameTethering();
+                        String password = InicioActivity.terminalBean.getPassTethering();
+                        Utilidades.setWifiTethering(getApplicationContext(),true, ssid, password);
+                    }catch(Exception e){
                         Utilidades.escribirLogErrores(e);
                     }
                 }
@@ -942,11 +951,21 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     } else {
                         //TODO click action
                     }
-                    String ssid = InicioActivity.terminalBean.getNameTethering();
-                    String password = InicioActivity.terminalBean.getPassTethering();
-                    try {
-                        Utilidades.setWifiTethering(getApplicationContext(), false, ssid, password);
-                    } catch (Exception e) {
+                    try{
+                        Toast.makeText(getApplicationContext(),"Deshabilitando Tethering",Toast.LENGTH_SHORT).show();
+                        String ssid = InicioActivity.terminalBean.getNameTethering();
+                        String password = InicioActivity.terminalBean.getPassTethering();
+                        Utilidades.setWifiTethering(getApplicationContext(),false, ssid, password);
+                        Utilidades.activarDatos(getApplicationContext());
+                    }catch(Exception e){
+                        Utilidades.escribirLogErrores(e);
+                    }
+                    try{
+                        String ssid = InicioActivity.terminalBean.getNameTethering();
+                        String password = InicioActivity.terminalBean.getPassTethering();
+                        Utilidades.setWifiTethering(getApplicationContext(),false, ssid, password);
+                        Utilidades.activarDatos(getApplicationContext());
+                    }catch(Exception e){
                         Utilidades.escribirLogErrores(e);
                     }
                 }

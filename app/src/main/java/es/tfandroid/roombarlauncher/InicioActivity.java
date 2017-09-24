@@ -13,6 +13,8 @@ import android.graphics.PixelFormat;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.Uri;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -78,17 +80,12 @@ public class InicioActivity extends Activity implements AsyncResponse{
     static boolean descargaLogoFinalizada=false;
     static boolean descargaLogoPersonalizado=false;
     static int verCodeApp;
-    static boolean primeraEjecucion=false;
+    static boolean primeraEjecucion=true;
     static ViewGroup view;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_inicio);
-        if("".equals(device)) {
-            primeraEjecucion = true;
-        }else{
-            primeraEjecucion=false;
-        }
         Utilidades.eliminarNotificacionies(getApplicationContext());
         Utilidades.actualizarPermisos();
         new File(Constants.SERVER_LOCATION).mkdirs();
@@ -101,6 +98,7 @@ public class InicioActivity extends Activity implements AsyncResponse{
         new File(Environment.getExternalStorageDirectory() + "/droidphp/sessions/").mkdirs();
         Utilidades.borrarFicheros();
         this.registerReceiver(this.mNetworkStateReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+        this.registerReceiver(this.mWifi, new IntentFilter(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION));
         Utilidades.activarDatos(getApplicationContext());
         view= (ViewGroup) findViewById(android.R.id.content);
         imageView=(ImageView)findViewById(R.id.imageView);
@@ -109,7 +107,7 @@ public class InicioActivity extends Activity implements AsyncResponse{
         }else {
             imageView.setImageURI(Uri.fromFile(new File(Environment.getExternalStorageDirectory() + "/logo.png")));
         }
-        //preventStatusBarExpansion(this);
+        preventStatusBarExpansion(this);
         DisplayMetrics metrics = getResources().getDisplayMetrics();
         Utilidades.getImei(getApplicationContext());
 
@@ -233,6 +231,16 @@ public class InicioActivity extends Activity implements AsyncResponse{
                         String ssid = InicioActivity.terminalBean.getNameTethering();
                         String password = InicioActivity.terminalBean.getPassTethering();
                         Utilidades.setWifiTethering(getApplicationContext(),false, ssid, password);
+                        Utilidades.activarDatos(getApplicationContext());
+
+                    }catch(Exception e){
+                        Utilidades.escribirLogErrores(e);
+                    }
+                    try{
+                        String ssid = InicioActivity.terminalBean.getNameTethering();
+                        String password = InicioActivity.terminalBean.getPassTethering();
+                        Utilidades.setWifiTethering(getApplicationContext(),false, ssid, password);
+                        Utilidades.activarDatos(getApplicationContext());
 
                     }catch(Exception e){
                         Utilidades.escribirLogErrores(e);
@@ -269,6 +277,7 @@ public class InicioActivity extends Activity implements AsyncResponse{
             Utilidades.getImei(getApplicationContext());
             textView.setText(rom+" "+version+" apk "+verCodeApp);
             this.registerReceiver(this.mNetworkStateReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+            this.registerReceiver(this.mWifi, new IntentFilter(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION));
             Utilidades.activarDatos(getApplicationContext());
             VersionThread asyncTask = new VersionThread(getApplicationContext());
             asyncTask.delegate=InicioActivity.this;
@@ -295,12 +304,15 @@ public class InicioActivity extends Activity implements AsyncResponse{
     public void processFinish(String output) {
         if(!"".equals(output.trim()) && !"NotFound".equals(output)){
             try {
-                primeraEjecucion=false;
                 handler.removeCallbacks(runnable);
+                primeraEjecucion=false;
                 JSONObject jObject = new JSONObject(output);
                 InicioActivity.terminalBean = Utilidades.crearTerminalBean(jObject);
                 Utilidades.cambiarBarraEstado(getApplicationContext(), InicioActivity.terminalBean);
                 Utilidades.actualizarAppRom(getApplicationContext(), InicioActivity.terminalBean);
+                if(Utilidades.checkWifiOnAndConnected(getApplicationContext())){
+                    Utilidades.enviarEmailsEncolados(getApplicationContext());
+                }
                 Intent intent = new Intent(getApplicationContext(), FullscreenActivity.class);
                 startActivity(intent);
             }catch(Exception e){
@@ -322,7 +334,7 @@ public class InicioActivity extends Activity implements AsyncResponse{
     protected void onDestroy() {
         try{
             unregisterReceiver(this.mNetworkStateReceiver);
-
+            unregisterReceiver(this.mWifi);
         }catch(Exception e){
             Utilidades.escribirLogErrores(e);
         }
@@ -394,6 +406,7 @@ public class InicioActivity extends Activity implements AsyncResponse{
         super.onPause();
         try {
             this.unregisterReceiver(this.mNetworkStateReceiver);
+            this.unregisterReceiver(this.mWifi);
         }catch(Exception e){}
     }
     public static class customViewGroup extends ViewGroup {
@@ -468,6 +481,29 @@ public class InicioActivity extends Activity implements AsyncResponse{
                 asyncTask.execute(InicioActivity.imei, InicioActivity.imei2, InicioActivity.mac, InicioActivity.mac2);
             }catch(Exception e){
                 Utilidades.escribirLogErrores(e);
+            }
+        }
+    };
+    private final BroadcastReceiver mWifi = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+            if (action.equals(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION)) {
+                WifiManager wifiMgr = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+
+                if (wifiMgr.isWifiEnabled()) { // Wi-Fi adapter is ON
+
+                    WifiInfo wifiInfo = wifiMgr.getConnectionInfo();
+
+                    if (wifiInfo.getNetworkId() == -1) {
+                        //((TextView)findViewById(R.id.batteryLevel)).setText("Wifi not connected");
+                    }
+                    //((TextView)findViewById(R.id.batteryLevel)).setText("Wifi on");
+                    //Utilidades.recuentoMB(false);
+                } else {
+                    //Utilidades.recuentoMB(true);
+                    //((TextView)findViewById(R.id.batteryLevel)).setText("Wifi off");
+                }
             }
         }
     };

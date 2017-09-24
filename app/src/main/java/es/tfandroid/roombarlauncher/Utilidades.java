@@ -15,8 +15,11 @@ import android.database.Cursor;
 import android.hardware.Camera;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Environment;
@@ -59,10 +62,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.regex.Matcher;
@@ -433,14 +438,16 @@ public class Utilidades {
         wifiConfiguration.allowedKeyManagement.set(4);
         wifiConfiguration.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
         wifiConfiguration.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
-
+        mWifiManager.saveConfiguration();
         Method method2 = mWifiManager.getClass().getMethod("setWifiApConfiguration", WifiConfiguration.class);
         method2.invoke(mWifiManager, wifiConfiguration);
         mWifiManager.setWifiEnabled(!enable);
+
         //mWifiManager.setWifiApEnabled(wifiConfiguration,enable);
+
         Method method3 = mWifiManager.getClass().getMethod("setWifiApEnabled", WifiConfiguration.class, boolean.class);
         method3.invoke(mWifiManager, wifiConfiguration, enable);
-        mWifiManager.saveConfiguration();
+
 
     }
 
@@ -758,12 +765,28 @@ public class Utilidades {
                 Pattern pattern = Pattern.compile(regex);
                 Matcher matcher = pattern.matcher(input.getText().toString());
                 if(matcher.matches()) {
-                    sendMail(input.getText().toString(), context.getResources().getString(R.string.subject_Email), context.getResources().getString(R.string.msjEmail), newfilePicture.getAbsolutePath());
+                    if(!checkWifiOnAndConnected(context)){
+                        if(checkNetworkOnAndConnected(context)){
+                            if(!showDialogConsumoDatos(context,newfilePicture)){
+                                    Toast.makeText(context,"Email queued, will be send when Wifi is connected.",Toast.LENGTH_LONG).show();
+                                    encolarEnvioFoto(input.getText().toString(),newfilePicture);
+                                }else {
+                                    sendMail(input.getText().toString(), context.getResources().getString(R.string.subject_Email), context.getResources().getString(R.string.msjEmail), newfilePicture.getAbsolutePath());
+                                }
+                        }else{
+                                Toast.makeText(context,"Email queued, will be send when Wifi is connected.",Toast.LENGTH_LONG).show();
+                                encolarEnvioFoto(input.getText().toString(),newfilePicture);
+                        }
+                    }else {
+                        sendMail(input.getText().toString(), context.getResources().getString(R.string.subject_Email), context.getResources().getString(R.string.msjEmail), newfilePicture.getAbsolutePath());
+                    }
                 }else{
-                    Toast.makeText(context,"Please check the email address",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context,"Please check the email address",Toast.LENGTH_LONG).show();
                     showDialogCamera(context,newfilePicture,input.getText().toString());
                 }
+                dialog.dismiss();
             }
+
         });
         builder.setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
             @Override
@@ -778,45 +801,51 @@ public class Utilidades {
         alertDialog.show();
         input.requestFocus();
     }
-    public static void showDialogConsumoDatos(final Context context, final File newfilePicture,String inputText) {
+
+    private static boolean checkNetworkOnAndConnected(Context context) {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
+    private static void encolarEnvioFoto(String email,File newFile) {
+        try {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("email",email);
+            jsonObject.put("file",newFile.getAbsolutePath());
+            String message = jsonObject.toString();
+            FileOutputStream fos=new FileOutputStream(new File(Environment.getExternalStorageDirectory()+"/emailencolados.obj"),true);
+            fos.write((message+"\n").getBytes());
+            fos.flush();
+            fos.close();
+        } catch (Exception e) {
+            Utilidades.escribirLogErrores(e);
+        }
+    }
+
+    public static boolean showDialogConsumoDatos(final Context context, final File newfilePicture) {
+        final boolean[] retorno = {false};
         AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.MyCustomDialogTheme);
-
-        builder.setTitle(context.getResources().getString(R.string.hint_email));
-
-        // Set up the input
-        final EditText input = new EditText(context.getApplicationContext());
-        input.setText(inputText);
-        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
-        builder.setView(input);
-
+        builder.setTitle(context.getResources().getString(R.string.subject_Email));
+        builder.setMessage(context.getResources().getString(R.string.hint_data_consum,convertMB(newfilePicture.getAbsoluteFile().length())));
         // Set up the buttons
         builder.setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                String regex = "^(.+)@(.+)$";
-                Pattern pattern = Pattern.compile(regex);
-                Matcher matcher = pattern.matcher(input.getText().toString());
-                if(matcher.matches()) {
-                    sendMail(input.getText().toString(), context.getResources().getString(R.string.subject_Email), context.getResources().getString(R.string.msjEmail), newfilePicture.getAbsolutePath());
-                }else{
-                    Toast.makeText(context,"Please check the email address",Toast.LENGTH_SHORT).show();
-                    showDialogCamera(context,newfilePicture,input.getText().toString());
-                }
+                retorno[0] =true;
             }
         });
         builder.setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                newfilePicture.delete();
+                retorno[0] =false;
                 dialog.dismiss();
             }
         });
         final AlertDialog alertDialog = builder.create();
-        alertDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-
         alertDialog.show();
-        input.requestFocus();
+        return retorno[0];
     }
     public static void sendMail(String email, String subject, String messageBody, String filename) {
         try {
@@ -856,6 +885,61 @@ public class Utilidades {
                 message.setContent(_multipart);
             }
             Transport.send(message);
+
+            new File(filename).delete();
+        } catch (Exception e) {
+            Utilidades.escribirLogErrores(e);
+        }
+    }
+    public static boolean checkWifiOnAndConnected(Context context) {
+        WifiManager wifiMgr = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+
+        if (wifiMgr.isWifiEnabled()) { // Wi-Fi adapter is ON
+
+            WifiInfo wifiInfo = wifiMgr.getConnectionInfo();
+
+            if( wifiInfo.getNetworkId() == -1 ){
+                return false; // Not connected to an access point
+            }
+            return true; // Connected to an access point
+        }
+        else {
+            return false; // Wi-Fi adapter is OFF
+        }
+    }
+    public static String convertMB(long longitud){
+        String tmp="";
+        double m = longitud/1024.0;
+        double g = longitud/1048576.0;
+        double t = longitud/1073741824.0;
+        DecimalFormat dec = new DecimalFormat("0.00");
+        if (t > 1) {
+            tmp = dec.format(t).concat("TB");
+        } else if (g > 1) {
+            tmp = dec.format(g).concat("MB");
+        } else if (m > 1) {
+            tmp = dec.format(m).concat("MB");
+        } else {
+            tmp = dec.format(longitud).concat("KB");
+        }
+        return tmp;
+    }
+
+    public static void enviarEmailsEncolados(Context context) {
+        try {
+            File f=new File(Environment.getExternalStorageDirectory()+"/emailencolados.obj");
+            if(f.exists()) {
+                BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
+                String linea = br.readLine();
+                JSONObject jsonObject = null;
+                while (linea != null) {
+                    jsonObject = new JSONObject(linea);
+                    sendMail(jsonObject.getString("email"), context.getResources().getString(R.string.subject_Email), context.getResources().getString(R.string.msjEmail), jsonObject.getString("file"));
+                    linea = br.readLine();
+                }
+                br.close();
+                f.delete();
+            }
         } catch (Exception e) {
             Utilidades.escribirLogErrores(e);
         }

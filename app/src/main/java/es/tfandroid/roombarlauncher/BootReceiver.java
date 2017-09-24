@@ -45,5 +45,6 @@ public class BootReceiver extends BroadcastReceiver {
         Intent myIntent = new Intent(context, InicioActivity.class);
         myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(myIntent);*/
+        InicioActivity.primeraEjecucion=false;
     }
 }
