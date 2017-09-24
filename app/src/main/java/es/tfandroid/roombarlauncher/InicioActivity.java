@@ -78,11 +78,17 @@ public class InicioActivity extends Activity implements AsyncResponse{
     static boolean descargaLogoFinalizada=false;
     static boolean descargaLogoPersonalizado=false;
     static int verCodeApp;
+    static boolean primeraEjecucion=false;
     static ViewGroup view;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_inicio);
+        if("".equals(device)) {
+            primeraEjecucion = true;
+        }else{
+            primeraEjecucion=false;
+        }
         Utilidades.eliminarNotificacionies(getApplicationContext());
         Utilidades.actualizarPermisos();
         new File(Constants.SERVER_LOCATION).mkdirs();
@@ -103,7 +109,7 @@ public class InicioActivity extends Activity implements AsyncResponse{
         }else {
             imageView.setImageURI(Uri.fromFile(new File(Environment.getExternalStorageDirectory() + "/logo.png")));
         }
-        preventStatusBarExpansion(this);
+        //preventStatusBarExpansion(this);
         DisplayMetrics metrics = getResources().getDisplayMetrics();
         Utilidades.getImei(getApplicationContext());
 
@@ -289,6 +295,7 @@ public class InicioActivity extends Activity implements AsyncResponse{
     public void processFinish(String output) {
         if(!"".equals(output.trim()) && !"NotFound".equals(output)){
             try {
+                primeraEjecucion=false;
                 handler.removeCallbacks(runnable);
                 JSONObject jObject = new JSONObject(output);
                 InicioActivity.terminalBean = Utilidades.crearTerminalBean(jObject);
@@ -301,7 +308,13 @@ public class InicioActivity extends Activity implements AsyncResponse{
             }
 
         }else {
-            handler.postDelayed(runnable, 15000);
+            if(primeraEjecucion) {
+                primeraEjecucion=false;
+                handler.postDelayed(runnable, 20000);
+            }else{
+                handler.postDelayed(runnable, 100);
+            }
+
         }
 
     }

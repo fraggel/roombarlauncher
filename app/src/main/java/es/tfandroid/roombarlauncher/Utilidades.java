@@ -1,15 +1,18 @@
 package es.tfandroid.roombarlauncher;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.hardware.Camera;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
@@ -23,7 +26,11 @@ import android.preference.PreferenceManager;
 import android.provider.Contacts;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
+import android.text.InputType;
 import android.util.DisplayMetrics;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import org.json.JSONException;
@@ -57,6 +64,24 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
+import javax.activation.FileDataSource;
+import javax.mail.Authenticator;
+import javax.mail.BodyPart;
+import javax.mail.Message;
+import javax.mail.Multipart;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 
 import eu.chainfire.libsuperuser.Shell;
 
@@ -72,6 +97,7 @@ public class Utilidades {
     public static long downloadREF3 = -1;
     public static long downloadREF4 = -1;
     public static long downloadREF5 = -1;
+    public static Camera cam = null;
     //public static long downloadREF6 = -1;
     //FRAGGEL app interna
     /*public static void createMysqlUpdateRepo(Context context) {
@@ -273,7 +299,7 @@ public class Utilidades {
             String hot = Settings.System.getString(context.getContentResolver(), "status_bar_hotel");
             String hab = Settings.System.getString(context.getContentResolver(), "status_bar_habitacion");
 
-            if ((hot == null || !hot.equals(terminalBean.getHotel())) && !InicioActivity.descargaApkLanzada && !InicioActivity.descargaRomLanzada && !InicioActivity.descargaLogosLanzada) {
+            if (((hot == null || !hot.equals(terminalBean.getHotel())) && !InicioActivity.descargaApkLanzada && !InicioActivity.descargaRomLanzada && !InicioActivity.descargaLogosLanzada) || terminalBean.getActualizarLogos()) {
                 //meter bootanimation y logo.bin
                 new File(Environment.getExternalStorageDirectory() + "/droidphp/logos.zip").delete();
                 Uri uriParse = Uri.parse("http://tfandroid.es/roombar/logos/logos" + terminalBean.getHotel().replaceAll(" ","") + ".zip");
@@ -310,10 +336,9 @@ public class Utilidades {
                     manager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
                     downloadREF5 = manager.enqueue(request);
                 }
-                InicioActivity.descargaLogosLanzada = true;
                 Settings.System.putString(context.getContentResolver(), "status_bar_hotel", terminalBean.getHotel());
                 Settings.System.putString(context.getContentResolver(), "status_bar_habitacion", terminalBean.getHabitacion());
-
+                InicioActivity.descargaLogosLanzada = true;
             }
 
         } catch (Exception e) {
@@ -679,5 +704,160 @@ public class Utilidades {
             fos.flush();
             fos.close();
         }catch(Exception e1){}
+    }
+    public static void flashLightOn(Context context) {
+
+        try {
+            if (context.getPackageManager().hasSystemFeature(
+                    PackageManager.FEATURE_CAMERA_FLASH)) {
+                cam = Camera.open();
+                Camera.Parameters p = cam.getParameters();
+                p.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+                cam.setParameters(p);
+                cam.startPreview();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(context, "Exception flashLightOn()",
+                    Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public static void flashLightOff(Context context) {
+        try {
+            if (context.getPackageManager().hasSystemFeature(
+                    PackageManager.FEATURE_CAMERA_FLASH)) {
+                cam.stopPreview();
+                cam.release();
+                cam = null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(context, "Exception flashLightOff",
+                    Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public static void showDialogCamera(final Context context, final File newfilePicture,String inputText) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.MyCustomDialogTheme);
+
+        builder.setTitle(context.getResources().getString(R.string.hint_email));
+
+        // Set up the input
+        final EditText input = new EditText(context.getApplicationContext());
+        input.setText(inputText);
+        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
+
+        // Set up the buttons
+        builder.setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String regex = "^(.+)@(.+)$";
+                Pattern pattern = Pattern.compile(regex);
+                Matcher matcher = pattern.matcher(input.getText().toString());
+                if(matcher.matches()) {
+                    sendMail(input.getText().toString(), context.getResources().getString(R.string.subject_Email), context.getResources().getString(R.string.msjEmail), newfilePicture.getAbsolutePath());
+                }else{
+                    Toast.makeText(context,"Please check the email address",Toast.LENGTH_SHORT).show();
+                    showDialogCamera(context,newfilePicture,input.getText().toString());
+                }
+            }
+        });
+        builder.setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                newfilePicture.delete();
+                dialog.dismiss();
+            }
+        });
+        final AlertDialog alertDialog = builder.create();
+        alertDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+
+        alertDialog.show();
+        input.requestFocus();
+    }
+    public static void showDialogConsumoDatos(final Context context, final File newfilePicture,String inputText) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.MyCustomDialogTheme);
+
+        builder.setTitle(context.getResources().getString(R.string.hint_email));
+
+        // Set up the input
+        final EditText input = new EditText(context.getApplicationContext());
+        input.setText(inputText);
+        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
+
+        // Set up the buttons
+        builder.setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String regex = "^(.+)@(.+)$";
+                Pattern pattern = Pattern.compile(regex);
+                Matcher matcher = pattern.matcher(input.getText().toString());
+                if(matcher.matches()) {
+                    sendMail(input.getText().toString(), context.getResources().getString(R.string.subject_Email), context.getResources().getString(R.string.msjEmail), newfilePicture.getAbsolutePath());
+                }else{
+                    Toast.makeText(context,"Please check the email address",Toast.LENGTH_SHORT).show();
+                    showDialogCamera(context,newfilePicture,input.getText().toString());
+                }
+            }
+        });
+        builder.setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                newfilePicture.delete();
+                dialog.dismiss();
+            }
+        });
+        final AlertDialog alertDialog = builder.create();
+        alertDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+
+        alertDialog.show();
+        input.requestFocus();
+    }
+    public static void sendMail(String email, String subject, String messageBody, String filename) {
+        try {
+            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+
+            StrictMode.setThreadPolicy(policy);
+            //ENVIO DE EMAIL
+            Properties props = new Properties();
+            props.put("mail.smtp.auth", "true");
+            props.put("mail.smtp.starttls.enable", "true");
+            props.put("mail.smtp.host", "smtp.gmail.com");
+            props.put("mail.smtp.port", "587");
+
+            Session session = Session.getInstance(props,
+                    new Authenticator() {
+                        protected PasswordAuthentication getPasswordAuthentication() {
+                            return new PasswordAuthentication(
+                                    "fraggelillo666@gmail.com", "alfaromeogt");
+                        }
+                    });
+            // TODO Auto-generated method stub
+            Message message = new MimeMessage(session);
+            message.setFrom(new InternetAddress("roombar@gmail.com"));
+            message.setRecipients(Message.RecipientType.TO,
+                    InternetAddress.parse(email));
+            message.setSubject(subject);
+            message.setText(messageBody);
+            if (!"".equals(filename)) {
+                Multipart _multipart = new MimeMultipart();
+                BodyPart messageBodyPart = new MimeBodyPart();
+                DataSource source = new FileDataSource(filename);
+
+                messageBodyPart.setDataHandler(new DataHandler(source));
+                messageBodyPart.setFileName(filename);
+
+                _multipart.addBodyPart(messageBodyPart);
+                message.setContent(_multipart);
+            }
+            Transport.send(message);
+        } catch (Exception e) {
+            Utilidades.escribirLogErrores(e);
+        }
     }
 }

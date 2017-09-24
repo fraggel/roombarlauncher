@@ -11,6 +11,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
+import android.hardware.Camera;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.net.wifi.WifiInfo;
@@ -19,6 +20,7 @@ import android.os.AsyncTask;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.text.InputType;
@@ -37,16 +39,36 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.appindexing.Thing;
+import com.google.android.gms.common.api.GoogleApiClient;
+
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
+import javax.activation.FileDataSource;
+import javax.mail.Authenticator;
+import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.mail.Multipart;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
 import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -62,22 +84,28 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
     ImageButton buttonMenu;
     ImageButton buttonHome;
     ImageButton buttonBack;
-    File newfilePicture =null;
-    public static String urlSaved=null;
+    File newfilePicture = null;
+    public static String urlSaved = null;
     FrameLayout mProgressDialog;
     AlphaAnimation inAnimation;
     AlphaAnimation outAnimation;
     //FRAGGEL app interna
     //public static String testUrl="http://localhost:8080/index.php";
-    public static String testUrl="http://www.roombar.com/App-RoomBar/01/";
+    public static String testUrl = "http://www.roombar.com/App-RoomBar/01/";
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    private GoogleApiClient client;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         try {
             super.onCreate(savedInstanceState);
             setContentView(R.layout.activity_fullscreen);
             String modo = getIntent().getStringExtra("modo");
-            if("noconectado".equals(modo)){
-                Toast.makeText(this,"Navegación sin conexión",Toast.LENGTH_LONG).show();
+            if ("noconectado".equals(modo)) {
+                Toast.makeText(this, "Navegación sin conexión", Toast.LENGTH_LONG).show();
             }
             /*actionBar = getSupportActionBar();
             actionBar.setTitle("");
@@ -90,15 +118,15 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             //mControlsView = findViewById(R.id.fullscreen_content_controls);
             mContentView = findViewById(R.id.fullscreen_content);
             mlinearBotones = findViewById(R.id.linearBotones);
-            mTextHotel = (TextView)findViewById(R.id.textHotel);
+            mTextHotel = (TextView) findViewById(R.id.textHotel);
 
-            if(Utilidades.getDpi(getApplicationContext())>180){
+            if (Utilidades.getDpi(getApplicationContext()) > 180) {
                 mlinearBotones.setVisibility(View.GONE);
                 mTextHotel.setVisibility(View.GONE);
-            }else{
+            } else {
                 mContentView.setBackgroundColor(Color.parseColor("#e55427"));
-                TextView text=(TextView)findViewById(R.id.textHotel);
-                text.setText(InicioActivity.terminalBean.hotel+InicioActivity.terminalBean.habitacion);
+                TextView text = (TextView) findViewById(R.id.textHotel);
+                text.setText(InicioActivity.terminalBean.hotel + InicioActivity.terminalBean.habitacion);
                 webview.setKeepScreenOn(true);
                 mlinearBotones.setVisibility(View.VISIBLE);
                 mTextHotel.setVisibility(View.VISIBLE);
@@ -125,36 +153,41 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     mTextHotel.setVisibility(View.VISIBLE);
                 }
             }*/
-            buttonMenu=(ImageButton)findViewById(R.id.buttonMenu);
-            buttonHome=(ImageButton)findViewById(R.id.buttonHome);
-            buttonBack=(ImageButton)findViewById(R.id.buttonBack);
+            buttonMenu = (ImageButton) findViewById(R.id.buttonMenu);
+            buttonHome = (ImageButton) findViewById(R.id.buttonHome);
+            buttonBack = (ImageButton) findViewById(R.id.buttonBack);
             buttonMenu.setOnClickListener(this);
             buttonHome.setOnClickListener(this);
             buttonBack.setOnClickListener(this);
 
-            webview.setLayerType(View.LAYER_TYPE_HARDWARE,null);
-            webview.setOnTouchListener(new OnSwipeTouchListener() {
-            public boolean onSwipeTop() {
-            return true;
+            webview.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+            if (!(Utilidades.getDpi(getApplicationContext()) > 180)) {
+                webview.setOnTouchListener(new OnSwipeTouchListener() {
+                    public boolean onSwipeTop() {
+                        return true;
+                    }
+
+                    public boolean onSwipeRight() {
+                        onBackPressed();
+                        return true;
+                    }
+
+                    public boolean onSwipeLeft() {
+                        if (webview.canGoForward()) {
+                            inAnimation = new AlphaAnimation(0f, 1f);
+                            inAnimation.setDuration(200);
+                            mProgressDialog.setAnimation(inAnimation);
+                            mProgressDialog.setVisibility(View.VISIBLE);
+                            webview.goForward();
+                        }
+                        return true;
+                    }
+
+                    public boolean onSwipeBottom() {
+                        return true;
+                    }
+                });
             }
-            public boolean onSwipeRight() {
-            onBackPressed();
-            return true;
-            }
-            public boolean onSwipeLeft() {
-            if(webview.canGoForward()){
-            inAnimation = new AlphaAnimation(0f, 1f);
-            inAnimation.setDuration(200);
-            mProgressDialog.setAnimation(inAnimation);
-            mProgressDialog.setVisibility(View.VISIBLE);
-            webview.goForward();
-            }
-            return true;
-            }
-            public boolean onSwipeBottom() {
-            return true;
-            }
-            });
             webview.loadUrl(testUrl);
             webview.setWebViewClient(new RoomBarWebViewClient());
             webview.getSettings().setSupportZoom(false);
@@ -191,8 +224,10 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             Utilidades.escribirLogErrores(e);
 
         }
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
-
 
 
     @Override
@@ -200,6 +235,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
         super.onPostCreate(savedInstanceState);
 
     }
+
     @Override
     protected void onRestart() {
         super.onRestart();
@@ -207,7 +243,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
     }
 
     @Override
-    public void onResume(){
+    public void onResume() {
 
         super.onResume();
         try {
@@ -222,25 +258,26 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             //this.registerReceiver(this.mHome, new IntentFilter(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
             VersionThread asyncTask = new VersionThread(getApplicationContext());
             asyncTask.delegate = FullscreenActivity.this;
-            asyncTask.execute(InicioActivity.imei,InicioActivity.imei2,InicioActivity.mac,InicioActivity.mac2);
+            asyncTask.execute(InicioActivity.imei, InicioActivity.imei2, InicioActivity.mac, InicioActivity.mac2);
             webview.reload();
             webview.onResume();
-        }catch(Exception e){
+        } catch (Exception e) {
             Utilidades.escribirLogErrores(e);
         }
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState){
+    public void onSaveInstanceState(Bundle outState) {
 
         super.onSaveInstanceState(outState);
     }
-    private BroadcastReceiver mNetworkStateReceiver =new BroadcastReceiver() {
+
+    private BroadcastReceiver mNetworkStateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             VersionThread asyncTask = new VersionThread(getApplicationContext());
             asyncTask.delegate = FullscreenActivity.this;
-            asyncTask.execute(InicioActivity.imei,InicioActivity.imei2,InicioActivity.mac,InicioActivity.mac2);
+            asyncTask.execute(InicioActivity.imei, InicioActivity.imei2, InicioActivity.mac, InicioActivity.mac2);
         }
     };
     private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver() {
@@ -272,8 +309,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
                 //Do something if connected
                 Toast.makeText(getApplicationContext(), "BT Connected", Toast.LENGTH_SHORT).show();
-            }
-            else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+            } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
                 //Do something if disconnected
                 Toast.makeText(getApplicationContext(), "BT Disconnected", Toast.LENGTH_SHORT).show();
             }
@@ -287,7 +323,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             if (action.equals(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)) {
                 try {
 
-                }catch(Exception e){
+                } catch (Exception e) {
                     Utilidades.escribirLogErrores(e);
                 }
 
@@ -330,13 +366,12 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
 
                     WifiInfo wifiInfo = wifiMgr.getConnectionInfo();
 
-                    if( wifiInfo.getNetworkId() == -1 ){
+                    if (wifiInfo.getNetworkId() == -1) {
                         //((TextView)findViewById(R.id.batteryLevel)).setText("Wifi not connected");
                     }
                     //((TextView)findViewById(R.id.batteryLevel)).setText("Wifi on");
                     //Utilidades.recuentoMB(false);
-                }
-                else {
+                } else {
                     //Utilidades.recuentoMB(true);
                     //((TextView)findViewById(R.id.batteryLevel)).setText("Wifi off");
                 }
@@ -346,17 +381,20 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
 
     @Override
     public void onBackPressed() {
-    try {
-        if (webview != null) {
+        try {
+            if (webview != null) {
 
-            if (webview.canGoBack()) {
-                inAnimation = new AlphaAnimation(0f, 1f);
-                inAnimation.setDuration(200);
-                mProgressDialog.setAnimation(inAnimation);
-                mProgressDialog.setVisibility(View.VISIBLE);
-                webview.goBackOrForward(-1);
-                //webview.goBack();
-            }/* else {
+                if (webview.canGoBack()) {
+                    inAnimation = new AlphaAnimation(0f, 1f);
+                    inAnimation.setDuration(200);
+                    mProgressDialog.setAnimation(inAnimation);
+                    mProgressDialog.setVisibility(View.VISIBLE);
+                    webview.goBackOrForward(-1);
+                    VersionThread asyncTask = new VersionThread(getApplicationContext());
+                    asyncTask.delegate = FullscreenActivity.this;
+                    asyncTask.execute(InicioActivity.imei, InicioActivity.imei2, InicioActivity.mac, InicioActivity.mac2);
+                    //webview.goBack();
+                }/* else {
                 if (webview.getUrl().equals(testUrl)) {
                     if(!Utilidades.comprobarConexion(testUrl,getApplicationContext())){
                         Intent intent = new Intent(getApplicationContext(), InicioActivity.class);
@@ -368,42 +406,88 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                 }
 
             }*/
+            }
+        } catch (Exception e) {
+            Utilidades.escribirLogErrores(e);
+            Intent intent = new Intent(getApplicationContext(), FullscreenActivity.class);
+            startActivity(intent);
         }
-    }catch(Exception e){
-        Utilidades.escribirLogErrores(e);
-        Intent intent = new Intent(getApplicationContext(), FullscreenActivity.class);
-        startActivity(intent);
-    }
     }
 
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode,Intent data){
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(newfilePicture!=null){
-            sendMail(data.getStringExtra("email"), data.getStringExtra("subject"), getResources().getString(R.string.msjEmail),newfilePicture.getAbsolutePath());
+        if (newfilePicture != null &&requestCode==0 && resultCode==-1)  {
+            Utilidades.showDialogCamera(this,newfilePicture,"");
         }
-        newfilePicture=null;
+        try {
+            if (mProgressDialog != null) {
+                outAnimation = new AlphaAnimation(1f, 0f);
+                outAnimation.setDuration(100);
+                mProgressDialog.setAnimation(outAnimation);
+                mProgressDialog.setVisibility(View.GONE);
+            }
+        } catch (Exception e) {
+            Utilidades.escribirLogErrores(e);
+        }
     }
 
     @Override
     public void onClick(View v) {
-        int id=v.getId();
-        if(id==R.id.buttonHome){
-            this.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN,KeyEvent.KEYCODE_HOME));
+        int id = v.getId();
+        if (id == R.id.buttonHome) {
+            this.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_HOME));
         }
-        if(id==R.id.buttonMenu){
-            this.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN,KeyEvent.KEYCODE_MENU));
+        if (id == R.id.buttonMenu) {
+            this.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MENU));
         }
-        if(id==R.id.buttonBack){
-            this.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN,KeyEvent.KEYCODE_BACK));
+        if (id == R.id.buttonBack) {
+            this.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BACK));
         }
     }
 
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    public Action getIndexApiAction() {
+        Thing object = new Thing.Builder()
+                .setName("Fullscreen Page") // TODO: Define a title for the content shown.
+                // TODO: Make sure this auto-generated URL is correct.
+                .setUrl(Uri.parse("http://[ENTER-YOUR-URL-HERE]"))
+                .build();
+        return new Action.Builder(Action.TYPE_VIEW)
+                .setObject(object)
+                .setActionStatus(Action.STATUS_TYPE_COMPLETED)
+                .build();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.connect();
+        AppIndex.AppIndexApi.start(client, getIndexApiAction());
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        AppIndex.AppIndexApi.end(client, getIndexApiAction());
+        client.disconnect();
+    }
+
     private class RoomBarWebViewClient extends WebViewClient {
-        boolean errorLoading=false;
+        boolean errorLoading = false;
+
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
-            boolean retorno=false;
+            boolean retorno = false;
             try {
 
                 mProgressDialog = (FrameLayout) findViewById(R.id.progressBarHolder);
@@ -414,12 +498,12 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                 String urlDestino = url;//.getUrl().toString();
                 VersionThread asyncTask = new VersionThread(getApplicationContext());
                 asyncTask.delegate = FullscreenActivity.this;
-                asyncTask.execute(InicioActivity.imei,InicioActivity.imei2,InicioActivity.mac,InicioActivity.mac2);
+                asyncTask.execute(InicioActivity.imei, InicioActivity.imei2, InicioActivity.mac, InicioActivity.mac2);
 
                 //FRAGGEL app interna
                 //String urlBase="http://localhost:8080/";
-                String urlBase="http://www.roombar.com";
-                if ((urlBase+"/App-RoomBar/01/06/01/").equals(urlDestino)) {
+                String urlBase = "http://www.roombar.com";
+                if ((urlBase + "/App-RoomBar/01/06/01/").equals(urlDestino)) {
                     /*Intent settings = new Intent(Settings.ACTION_LOCALE_SETTINGS);
                     startActivity(settings);
                     return true;
@@ -441,7 +525,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                         }
                     }catch(Exception e){}
                     retorno= true;
-                }*/ else if ((urlBase+"/App-RoomBar/01/06/03/").equals(urlDestino)) {
+                }*/ else if ((urlBase + "/App-RoomBar/01/06/03/").equals(urlDestino)) {
                     //CAMARA
                     final String dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/picFolder/";
                     File newdir = new File(dir);
@@ -449,7 +533,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     String file = dir + Utilidades.asignaFechaCompleta() + ".jpg";
                     newfilePicture = new File(file);
                     File[] files = newdir.listFiles();
-                    for(int x=0;x<files.length;x++){
+                    for (int x = 0; x < files.length; x++) {
                         files[x].delete();
                     }
                     try {
@@ -464,7 +548,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri);
                     startActivityForResult(cameraIntent, 0);
 
-                    retorno= true;
+                    retorno = true;
                     try {
                         if (mProgressDialog != null) {
                             outAnimation = new AlphaAnimation(1f, 0f);
@@ -472,10 +556,10 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                             mProgressDialog.setAnimation(outAnimation);
                             mProgressDialog.setVisibility(View.GONE);
                         }
-                    }catch(Exception e){
+                    } catch (Exception e) {
                         Utilidades.escribirLogErrores(e);
                     }
-                } else if ((urlBase+"/App-RoomBar/01/06/04/").equals(urlDestino)) {
+                } else if ((urlBase + "/App-RoomBar/01/06/04/").equals(urlDestino)) {
                     final String m_Text = InicioActivity.terminalBean.getPassSistema();
                     AlertDialog.Builder builder = new AlertDialog.Builder(FullscreenActivity.this, R.style.MyCustomDialogTheme);
 
@@ -521,7 +605,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                         }
                     });
                     input.requestFocus();
-                    retorno= true;
+                    retorno = true;
                     try {
                         if (mProgressDialog != null) {
                             outAnimation = new AlphaAnimation(1f, 0f);
@@ -529,38 +613,55 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                             mProgressDialog.setAnimation(outAnimation);
                             mProgressDialog.setVisibility(View.GONE);
                         }
-                    }catch(Exception e){
+                    } catch (Exception e) {
                         Utilidades.escribirLogErrores(e);
                     }
+                }else if("http://www.roombar.com/App-RoomBar/01/06/06/".equals(urlDestino)){
+                    if(Utilidades.cam!=null){
+                        Utilidades.flashLightOff(getApplicationContext());
+                    }else{
+                        Utilidades.flashLightOn(getApplicationContext());
+                    }
+                    try {
+                        if (mProgressDialog != null) {
+                            outAnimation = new AlphaAnimation(1f, 0f);
+                            outAnimation.setDuration(100);
+                            mProgressDialog.setAnimation(outAnimation);
+                            mProgressDialog.setVisibility(View.GONE);
+                        }
+                    } catch (Exception e) {
+                        Utilidades.escribirLogErrores(e);
+                    }
+                    retorno=true;
                 } else if (urlDestino.contains("tel:")) {
                     //Telefono
-                    boolean invalid=false;
-                    String tel=urlDestino.split("tel:")[1];
+                    boolean invalid = false;
+                    String tel = urlDestino.split("tel:")[1];
                     if (!"".equals(tel)) {
-                        if(tel.indexOf("#")==-1 && tel.indexOf("*")==-1){
-                            if(tel.length()>8 && !listaNegraNumeros(tel)){
-                                invalid=false;
-                            }else{
-                                if(listaBlancaNumeros(tel)){
-                                    invalid=false;
-                                }else{
-                                    invalid=true;
+                        if (tel.indexOf("#") == -1 && tel.indexOf("*") == -1) {
+                            if (tel.length() > 8 && !listaNegraNumeros(tel)) {
+                                invalid = false;
+                            } else {
+                                if (listaBlancaNumeros(tel)) {
+                                    invalid = false;
+                                } else {
+                                    invalid = true;
                                 }
                             }
 
-                        }else{
-                            invalid=true;
+                        } else {
+                            invalid = true;
                         }
 
-                        if(invalid){
+                        if (invalid) {
                             Toast.makeText(getApplicationContext(), "Número no válido", Toast.LENGTH_LONG).show();
-                        }else{
+                        } else {
                             Intent intent = new Intent(Intent.ACTION_CALL);
                             intent.setData(Uri.parse("tel:" + tel));
                             startActivity(intent);
                         }
                     }
-                    retorno=true;
+                    retorno = true;
                     try {
                         if (mProgressDialog != null) {
                             outAnimation = new AlphaAnimation(1f, 0f);
@@ -568,7 +669,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                             mProgressDialog.setAnimation(outAnimation);
                             mProgressDialog.setVisibility(View.GONE);
                         }
-                    }catch(Exception e){
+                    } catch (Exception e) {
                         Utilidades.escribirLogErrores(e);
                     }
 
@@ -672,8 +773,8 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                             mProgressDialog.setVisibility(View.GONE);
                         }
                     }catch(Exception e){}*/
-                }else{
-                        webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
+                } else {
+                    webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
                 }
             } catch (Exception e) {
                 Utilidades.escribirLogErrores(e);
@@ -688,8 +789,8 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
 
 
         @Override
-        public void onPageFinished(WebView view, String url){
-            if(!errorLoading) {
+        public void onPageFinished(WebView view, String url) {
+            if (!errorLoading) {
                 urlSaved = url;
             }
             /*if(view.getTitle().trim().contains("404")){
@@ -704,14 +805,15 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                         mProgressDialog.setAnimation(outAnimation);
                         mProgressDialog.setVisibility(View.GONE);
                     }
-                }catch(Exception e){
+                } catch (Exception e) {
                     Utilidades.escribirLogErrores(e);
                 }
-            }catch(Exception e){
+            } catch (Exception e) {
                 Utilidades.escribirLogErrores(e);
             }
-            errorLoading=false;
+            errorLoading = false;
         }
+
         @Override
         public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
             try {
@@ -722,15 +824,15 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                         mProgressDialog.setAnimation(outAnimation);
                         mProgressDialog.setVisibility(View.GONE);
                     }
-                }catch(Exception e){
+                } catch (Exception e) {
                     Utilidades.escribirLogErrores(e);
                 }
                 super.onReceivedError(view, errorCode, description, failingUrl);
-                if(testUrl.equals(failingUrl)){
+                if (testUrl.equals(failingUrl)) {
                     //Mostrar pantalla que diga que no se puede mostrar nada, que compruebe que hay conexión a internet,
                     //Toast.makeText(FullscreenActivity.this, "No hay conexión para la pantalla inicial", Toast.LENGTH_SHORT).show();
-                }else{
-                    if (!Utilidades.comprobarConexion(failingUrl,getApplicationContext())) {
+                } else {
+                    if (!Utilidades.comprobarConexion(failingUrl, getApplicationContext())) {
                         Toast.makeText(FullscreenActivity.this, "No hay conexión", Toast.LENGTH_SHORT).show();
                         errorLoading = true;
                     } else {
@@ -740,41 +842,43 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                         view.loadUrl(urlSaved);
                     }
                 }
-            }catch(Exception e){
+            } catch (Exception e) {
                 Utilidades.escribirLogErrores(e);
             }
-            }
         }
+    }
+
     private boolean listaNegraNumeros(String s) {
-        boolean retorno=false;
-        String[] listaTelefonos=new String[]{"80"};
-        for(int x =0;x<listaTelefonos.length;x++){
-            if(s.substring(0,2).equals(listaTelefonos[x])){
-                retorno=true;
+        boolean retorno = false;
+        String[] listaTelefonos = new String[]{"80"};
+        for (int x = 0; x < listaTelefonos.length; x++) {
+            if (s.substring(0, 2).equals(listaTelefonos[x])) {
+                retorno = true;
                 break;
-            }else{
-                retorno=false;
+            } else {
+                retorno = false;
             }
         }
         return retorno;
     }
 
     private boolean listaBlancaNumeros(String s) {
-        boolean retorno=false;
-        String[] listaTelefonos=new String[]{"010","091","112"};
-        for(int x =0;x<listaTelefonos.length;x++){
-            if(s.equals(listaTelefonos[x])){
-                retorno=true;
+        boolean retorno = false;
+        String[] listaTelefonos = new String[]{"010", "091", "112"};
+        for (int x = 0; x < listaTelefonos.length; x++) {
+            if (s.equals(listaTelefonos[x])) {
+                retorno = true;
                 break;
-            }else{
-                retorno=false;
+            } else {
+                retorno = false;
             }
         }
         return retorno;
     }
+
     @Override
     public void processFinish(String output) {
-        if(!"".equals(output.trim()) && !"NotFound".equals(output)){
+        if (!"".equals(output.trim()) && !"NotFound".equals(output)) {
             try {
                 JSONObject jObject = new JSONObject(output);
                 InicioActivity.terminalBean = Utilidades.crearTerminalBean(jObject);
@@ -793,22 +897,23 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     mlinearBotones.setVisibility(View.VISIBLE);
 
                 }*/
-                if(Utilidades.getDpi(getApplicationContext())>180){
+                if (Utilidades.getDpi(getApplicationContext()) > 180) {
                     mlinearBotones.setVisibility(View.GONE);
                     mTextHotel.setVisibility(View.GONE);
-                }else{
+                } else {
                     mContentView.setBackgroundColor(Color.parseColor("#e55427"));
-                    TextView text=(TextView)findViewById(R.id.textHotel);
-                    text.setText(InicioActivity.terminalBean.hotel+InicioActivity.terminalBean.habitacion);
+                    TextView text = (TextView) findViewById(R.id.textHotel);
+                    text.setText(InicioActivity.terminalBean.hotel + InicioActivity.terminalBean.habitacion);
                     webview.setKeepScreenOn(true);
                     mlinearBotones.setVisibility(View.VISIBLE);
                     mTextHotel.setVisibility(View.VISIBLE);
                 }
-            }catch(Exception e){
+            } catch (Exception e) {
                 Utilidades.escribirLogErrores(e);
             }
         }
     }
+
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         int action = event.getAction();
@@ -823,9 +928,11 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     }
                     String ssid = InicioActivity.terminalBean.getNameTethering();
                     String password = InicioActivity.terminalBean.getPassTethering();
-                    try{
-                        Utilidades.setWifiTethering(getApplicationContext(),true, ssid, password);
-                    }catch(Exception e){Utilidades.escribirLogErrores(e);}
+                    try {
+                        Utilidades.setWifiTethering(getApplicationContext(), true, ssid, password);
+                    } catch (Exception e) {
+                        Utilidades.escribirLogErrores(e);
+                    }
                 }
                 return true;
             case KeyEvent.KEYCODE_VOLUME_DOWN:
@@ -837,14 +944,16 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     }
                     String ssid = InicioActivity.terminalBean.getNameTethering();
                     String password = InicioActivity.terminalBean.getPassTethering();
-                    try{
-                        Utilidades.setWifiTethering(getApplicationContext(),false, ssid, password);
-                    }catch(Exception e){Utilidades.escribirLogErrores(e);}
+                    try {
+                        Utilidades.setWifiTethering(getApplicationContext(), false, ssid, password);
+                    } catch (Exception e) {
+                        Utilidades.escribirLogErrores(e);
+                    }
                 }
                 return true;
             case KeyEvent.KEYCODE_MENU:
                 if (action == KeyEvent.ACTION_DOWN) {
-                        webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
+                    webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
                     //FRAGGEL app interna
                     //String urlBase="http://localhost:8080";
                     String urlBase = "http://www.roombar.com";
@@ -858,7 +967,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                 return true;
             case KeyEvent.KEYCODE_HOME:
                 if (action == KeyEvent.ACTION_DOWN) {
-                        webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
+                    webview.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
                     //FRAGGEL app interna
                     //String urlBase="http://localhost:8080";
                     String urlBase = "http://www.roombar.com";
@@ -872,9 +981,10 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                 return super.dispatchKeyEvent(event);
         }
     }
+
     @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event){
-        if(keyCode==KeyEvent.KEYCODE_HOME){
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_HOME) {
             String urlBase = "http://www.roombar.com";
             webview.clearHistory();
 
@@ -883,14 +993,9 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
         }
         return true;
     }
-    private void sendMail(String email, String subject, String messageBody,String filename)
-    {
-        try {
-           //ENVIO DE EMAIL
-        } catch (Exception e) {
-            Utilidades.escribirLogErrores(e);
-        }
-    }
+
+
+
     public void onPause() {
         super.onPause();
         //this.urlSaved=webview.getUrl();
@@ -902,6 +1007,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
         //this.unregisterReceiver(this.mHome);
         this.unregisterReceiver(this.mNetworkStateReceiver);
     }
+
     private class SendMailTask extends AsyncTask<Message, Void, Void> {
         private ProgressDialog progressDialog;
 
@@ -921,7 +1027,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     mProgressDialog.setAnimation(outAnimation);
                     mProgressDialog.setVisibility(View.GONE);
                 }
-            }catch(Exception e){
+            } catch (Exception e) {
                 Utilidades.escribirLogErrores(e);
             }
         }

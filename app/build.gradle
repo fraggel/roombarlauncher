@@ -37,4 +37,5 @@ dependencies {
     provided 'eu.chainfire:libsuperuser:1.0.0.+'
     compile files('libs/mysql-connector-java-5.0.6-bin.jar')
     apk files('libs/mysql-connector-java-5.0.6-bin.jar')
+    compile 'com.google.android.gms:play-services-appindexing:8.4.0'
 }

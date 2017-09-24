@@ -5,4 +5,6 @@
     <string name="hint_phone">Introduce número de teléfono</string>
     <string name="cargando">Loading....</string>
     <string name="msjEmail">Imagen Adjunta</string>
+    <string name="hint_email">Insert email</string>
+    <string name="subject_Email">Roombar Picture</string>
 </resources>
