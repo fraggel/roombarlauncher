@@ -85,6 +85,8 @@ public class InicioActivity extends Activity implements AsyncResponse{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_inicio);
         Utilidades.eliminarNotificacionies(getApplicationContext());
         Utilidades.actualizarPermisos();
@@ -308,8 +310,9 @@ public class InicioActivity extends Activity implements AsyncResponse{
                 primeraEjecucion=false;
                 JSONObject jObject = new JSONObject(output);
                 InicioActivity.terminalBean = Utilidades.crearTerminalBean(jObject);
-                Utilidades.cambiarBarraEstado(getApplicationContext(), InicioActivity.terminalBean);
+                /*Utilidades.cambiarBarraEstado(getApplicationContext(), InicioActivity.terminalBean);
                 Utilidades.actualizarAppRom(getApplicationContext(), InicioActivity.terminalBean);
+                */
                 if(Utilidades.checkWifiOnAndConnected(getApplicationContext())){
                     Utilidades.enviarEmailsEncolados(getApplicationContext());
                 }

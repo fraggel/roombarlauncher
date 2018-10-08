@@ -1,12 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "24.0.2"
+    compileSdkVersion 26
+    buildToolsVersion "28.0.2"
     defaultConfig {
         applicationId "es.tfandroid.roombarlauncher"
         minSdkVersion 19
-        targetSdkVersion 23
+        targetSdkVersion 26
        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

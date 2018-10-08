@@ -102,6 +102,8 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
     protected void onCreate(Bundle savedInstanceState) {
         try {
             super.onCreate(savedInstanceState);
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                    WindowManager.LayoutParams.FLAG_FULLSCREEN);
             setContentView(R.layout.activity_fullscreen);
             String modo = getIntent().getStringExtra("modo");
             if ("noconectado".equals(modo)) {
@@ -122,7 +124,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
 
             if (Utilidades.getDpi(getApplicationContext()) > 180) {
                 mlinearBotones.setVisibility(View.GONE);
-                mTextHotel.setVisibility(View.GONE);
+                mTextHotel.setVisibility(View.VISIBLE);
             } else {
                 mContentView.setBackgroundColor(Color.parseColor("#e55427"));
                 TextView text = (TextView) findViewById(R.id.textHotel);
@@ -131,6 +133,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                 mlinearBotones.setVisibility(View.VISIBLE);
                 mTextHotel.setVisibility(View.VISIBLE);
             }
+            mTextHotel.setText(InicioActivity.terminalBean.hotel + InicioActivity.terminalBean.habitacion);
             /*if(InicioActivity.terminalBean!=null){
                 if("0".equals(InicioActivity.terminalBean.getTablet())){
                     mlinearBotones.setVisibility(View.GONE);
@@ -887,8 +890,9 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             try {
                 JSONObject jObject = new JSONObject(output);
                 InicioActivity.terminalBean = Utilidades.crearTerminalBean(jObject);
-                Utilidades.cambiarBarraEstado(getApplicationContext(), InicioActivity.terminalBean);
+                /*Utilidades.cambiarBarraEstado(getApplicationContext(), InicioActivity.terminalBean);
                 Utilidades.actualizarAppRom(getApplicationContext(), InicioActivity.terminalBean);
+                */
                 Utilidades.eliminarNotificacionies(getApplicationContext());
                 if(Utilidades.checkWifiOnAndConnected(getApplicationContext())){
                     Utilidades.enviarEmailsEncolados(getApplicationContext());
@@ -907,15 +911,14 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                 }*/
                 if (Utilidades.getDpi(getApplicationContext()) > 180) {
                     mlinearBotones.setVisibility(View.GONE);
-                    mTextHotel.setVisibility(View.GONE);
+                    mTextHotel.setVisibility(View.VISIBLE);
                 } else {
                     mContentView.setBackgroundColor(Color.parseColor("#e55427"));
-                    TextView text = (TextView) findViewById(R.id.textHotel);
-                    text.setText(InicioActivity.terminalBean.hotel + InicioActivity.terminalBean.habitacion);
                     webview.setKeepScreenOn(true);
                     mlinearBotones.setVisibility(View.VISIBLE);
                     mTextHotel.setVisibility(View.VISIBLE);
                 }
+                mTextHotel.setText(InicioActivity.terminalBean.hotel + InicioActivity.terminalBean.habitacion);
             } catch (Exception e) {
                 Utilidades.escribirLogErrores(e);
             }
