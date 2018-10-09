@@ -36,6 +36,7 @@ import android.webkit.WebViewClient;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -50,6 +51,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Calendar;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -134,6 +136,11 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                 mTextHotel.setVisibility(View.VISIBLE);
             }
             mTextHotel.setText(InicioActivity.terminalBean.hotel + InicioActivity.terminalBean.habitacion);
+            try {
+                ((TextView) findViewById(R.id.date)).setText(asignaHoras());
+            } catch (Exception e) {
+                Utilidades.escribirLogErrores(e);
+            }
             /*if(InicioActivity.terminalBean!=null){
                 if("0".equals(InicioActivity.terminalBean.getTablet())){
                     mlinearBotones.setVisibility(View.GONE);
@@ -281,6 +288,30 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             VersionThread asyncTask = new VersionThread(getApplicationContext());
             asyncTask.delegate = FullscreenActivity.this;
             asyncTask.execute(InicioActivity.imei, InicioActivity.imei2, InicioActivity.mac, InicioActivity.mac2);
+            ConnectivityManager connMgr = (ConnectivityManager)
+                    context.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+            // check for wifi
+            final android.net.NetworkInfo wifi = connMgr.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+
+            // check for mobile data
+            final android.net.NetworkInfo mobile = connMgr.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+            ImageView mIconNetwork = (ImageView) findViewById(R.id.iconNetwork);
+            ImageView mIconWifi = (ImageView) findViewById(R.id.iconWifi);
+            //ImageView mIconTether = (ImageView) findViewById(R.id.iconTethering);
+            if( wifi.isConnectedOrConnecting() ) {
+                mIconNetwork.setVisibility(View.GONE);
+                mIconWifi.setVisibility(View.VISIBLE);
+                //mIconTether.setVisibility(View.GONE);
+            } else if( mobile.isConnectedOrConnecting() ) {
+                mIconNetwork.setVisibility(View.VISIBLE);
+                mIconWifi.setVisibility(View.GONE);
+                //mIconTether.setVisibility(View.GONE);
+            } else {
+                mIconNetwork.setVisibility(View.GONE);
+                mIconWifi.setVisibility(View.GONE);
+                //mIconTether.setVisibility(View.GONE);
+            }
         }
     };
     private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver() {
@@ -298,12 +329,32 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
         @Override
         public void onReceive(Context ctxt, Intent intent) {
             try {
-                //((TextView) findViewById(R.id.date)).setText(asignaHoras());
+                ((TextView) findViewById(R.id.date)).setText(asignaHoras());
             } catch (Exception e) {
                 Utilidades.escribirLogErrores(e);
             }
         }
     };
+    public String asignaHoras(){
+        String aux="";
+        Calendar rightNow = Calendar.getInstance();
+        int hora = rightNow.get(Calendar.HOUR_OF_DAY);
+        if(hora<10){
+            aux=aux+"0"+hora;
+        }else{
+            aux=aux+String.valueOf(hora);
+        }
+        aux=aux+":";
+        int minutos = rightNow.get(Calendar.MINUTE);
+        if(minutos<10){
+            aux=aux+"0"+minutos;
+        }else{
+            aux=aux+String.valueOf(minutos);
+        }
+
+        return aux;
+
+    }
     private final BroadcastReceiver mBt = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -364,7 +415,9 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             final String action = intent.getAction();
             if (action.equals(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION)) {
                 WifiManager wifiMgr = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-
+                ImageView mIconNetwork = (ImageView) findViewById(R.id.iconNetwork);
+                ImageView mIconWifi = (ImageView) findViewById(R.id.iconWifi);
+                //ImageView mIconTether = (ImageView) findViewById(R.id.iconTethering);
                 if (wifiMgr.isWifiEnabled()) { // Wi-Fi adapter is ON
 
                     WifiInfo wifiInfo = wifiMgr.getConnectionInfo();
@@ -375,9 +428,14 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     Utilidades.enviarEmailsEncolados(getApplicationContext());
                     //((TextView)findViewById(R.id.batteryLevel)).setText("Wifi on");
                     //Utilidades.recuentoMB(false);
+                    mIconNetwork.setVisibility(View.GONE);
+                    mIconWifi.setVisibility(View.VISIBLE);
+
                 } else {
                     //Utilidades.recuentoMB(true);
                     //((TextView)findViewById(R.id.batteryLevel)).setText("Wifi off");
+                    mIconNetwork.setVisibility(View.GONE);
+                    mIconWifi.setVisibility(View.GONE);
                 }
             }
         }
@@ -890,9 +948,9 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             try {
                 JSONObject jObject = new JSONObject(output);
                 InicioActivity.terminalBean = Utilidades.crearTerminalBean(jObject);
-                /*Utilidades.cambiarBarraEstado(getApplicationContext(), InicioActivity.terminalBean);
+                /*Utilidades.cambiarBarraEstado(getApplicationContext(), InicioActivity.terminalBean);*/
                 Utilidades.actualizarAppRom(getApplicationContext(), InicioActivity.terminalBean);
-                */
+
                 Utilidades.eliminarNotificacionies(getApplicationContext());
                 if(Utilidades.checkWifiOnAndConnected(getApplicationContext())){
                     Utilidades.enviarEmailsEncolados(getApplicationContext());

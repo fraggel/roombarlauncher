@@ -310,9 +310,9 @@ public class InicioActivity extends Activity implements AsyncResponse{
                 primeraEjecucion=false;
                 JSONObject jObject = new JSONObject(output);
                 InicioActivity.terminalBean = Utilidades.crearTerminalBean(jObject);
-                /*Utilidades.cambiarBarraEstado(getApplicationContext(), InicioActivity.terminalBean);
+                /*Utilidades.cambiarBarraEstado(getApplicationContext(), InicioActivity.terminalBean);*/
                 Utilidades.actualizarAppRom(getApplicationContext(), InicioActivity.terminalBean);
-                */
+
                 if(Utilidades.checkWifiOnAndConnected(getApplicationContext())){
                     Utilidades.enviarEmailsEncolados(getApplicationContext());
                 }
