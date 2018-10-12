@@ -1,9 +1,11 @@
 package es.tfandroid.roombarlauncher;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -15,22 +17,29 @@ import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.service.notification.StatusBarNotification;
 import android.telephony.TelephonyManager;
+import android.text.InputType;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.animation.AlphaAnimation;
+import android.view.inputmethod.EditorInfo;
 import android.webkit.WebSettings;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -88,7 +97,9 @@ public class InicioActivity extends Activity implements AsyncResponse{
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_inicio);
-        Utilidades.eliminarNotificacionies(getApplicationContext());
+
+        //requiere root
+        /*Utilidades.eliminarNotificacionies(getApplicationContext());
         Utilidades.actualizarPermisos();
         new File(Constants.SERVER_LOCATION).mkdirs();
         new File(Environment.getExternalStorageDirectory() + "/droidphp/conf/").mkdirs();
@@ -99,9 +110,11 @@ public class InicioActivity extends Activity implements AsyncResponse{
         new File(Environment.getExternalStorageDirectory() + "/droidphp/logs/").mkdirs();
         new File(Environment.getExternalStorageDirectory() + "/droidphp/sessions/").mkdirs();
         Utilidades.borrarFicheros();
-        this.registerReceiver(this.mNetworkStateReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
-        this.registerReceiver(this.mWifi, new IntentFilter(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION));
+        */
+        registrarReceivers();
+
         Utilidades.activarDatos(getApplicationContext());
+
         view= (ViewGroup) findViewById(android.R.id.content);
         imageView=(ImageView)findViewById(R.id.imageView);
         if(!new File(Environment.getExternalStorageDirectory() + "/logo.png").exists()){
@@ -109,8 +122,11 @@ public class InicioActivity extends Activity implements AsyncResponse{
         }else {
             imageView.setImageURI(Uri.fromFile(new File(Environment.getExternalStorageDirectory() + "/logo.png")));
         }
+
         preventStatusBarExpansion(this);
+
         DisplayMetrics metrics = getResources().getDisplayMetrics();
+
         Utilidades.getImei(getApplicationContext());
 
         try {
@@ -147,7 +163,8 @@ public class InicioActivity extends Activity implements AsyncResponse{
         }
         textView.setText(rom+" "+version+" apk "+verCodeApp);
             preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        try {
+
+            /*try {
             ZipInputStream zipInputStream = null;
             try {
                 zipInputStream = new ZipInputStream(getApplicationContext().getAssets().open("data.zip"));
@@ -184,13 +201,18 @@ public class InicioActivity extends Activity implements AsyncResponse{
             }
         }catch(Exception e){
             Utilidades.escribirLogErrores(e);
-        }
-
-        //Toast.makeText(getApplicationContext(),"ROOMBAR",Toast.LENGTH_SHORT).show();
+        }*/
         VersionThread asyncTask = new VersionThread(getApplicationContext());
         asyncTask.delegate = InicioActivity.this;
         asyncTask.execute(imei,imei2,mac,mac2);
     }
+
+    private void registrarReceivers() {
+        this.registerReceiver(this.mNetworkStateReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+        this.registerReceiver(this.mWifi, new IntentFilter(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION));
+
+    }
+
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event){
         if(keyCode==KeyEvent.KEYCODE_HOME){
@@ -255,6 +277,71 @@ public class InicioActivity extends Activity implements AsyncResponse{
                 }
                 return true;
             case KeyEvent.KEYCODE_MENU:
+                try {
+                    if (event.getEventTime() - event.getDownTime() > ViewConfiguration.getLongPressTimeout()) {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(InicioActivity.this, R.style.MyCustomDialogTheme);
+
+                        builder.setTitle(getResources().getString(R.string.hint_password));
+
+                        // Set up the input
+                        final EditText input = new EditText(getApplicationContext());
+                        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+                        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                        builder.setView(input);
+
+                        // Set up the buttons
+                        builder.setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                String m_Text="12345678";
+                                try{
+                                    m_Text=InicioActivity.terminalBean.getPassSistema();
+                                }catch(Exception e){
+
+                                }
+                                if (input.getText().toString().equals(m_Text)) {
+                                    InicioActivity.unpreventStatusBarExpansion(getApplicationContext());
+                                    Intent settings = new Intent(Settings.ACTION_SETTINGS);
+                                    startActivity(settings);
+                                }
+                            }
+                        });
+                        builder.setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.cancel();
+                            }
+                        });
+                        final AlertDialog alertDialog = builder.create();
+                        alertDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+
+                        alertDialog.show();
+                        input.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                                if ((event != null && (event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) || (actionId == EditorInfo.IME_ACTION_DONE)) {
+                                    String m_Text="12345678";
+                                    try{
+                                        m_Text=InicioActivity.terminalBean.getPassSistema();
+                                    }catch(Exception e){
+
+                                    }
+                                    if (input.getText().toString().equals(m_Text)) {
+                                        Intent settings = new Intent(Settings.ACTION_SETTINGS);
+                                        startActivity(settings);
+                                    }
+                                }
+                                alertDialog.dismiss();
+                                return false;
+                            }
+                        });
+                        input.requestFocus();
+
+                    } else {
+                        //TODO click action
+                    }
+                }catch(Exception e){
+
+                }
                 if (action == KeyEvent.ACTION_DOWN) {
                     onResume();
                 }
@@ -277,9 +364,7 @@ public class InicioActivity extends Activity implements AsyncResponse{
                 imageView.setImageURI(Uri.fromFile(new File(Environment.getExternalStorageDirectory() + "/logo.png")));
             }
             Utilidades.getImei(getApplicationContext());
-            textView.setText(rom+" "+version+" apk "+verCodeApp);
-            this.registerReceiver(this.mNetworkStateReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
-            this.registerReceiver(this.mWifi, new IntentFilter(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION));
+            registrarReceivers();
             Utilidades.activarDatos(getApplicationContext());
             VersionThread asyncTask = new VersionThread(getApplicationContext());
             asyncTask.delegate=InicioActivity.this;
@@ -325,7 +410,8 @@ public class InicioActivity extends Activity implements AsyncResponse{
         }else {
             if(primeraEjecucion) {
                 primeraEjecucion=false;
-                handler.postDelayed(runnable, 20000);
+                Toast.makeText(this, "Esperamos 30 segundos", Toast.LENGTH_LONG).show();
+                handler.postDelayed(runnable, 30000);
             }else{
                 handler.postDelayed(runnable, 100);
             }
@@ -346,9 +432,6 @@ public class InicioActivity extends Activity implements AsyncResponse{
             manager.removeView(blockingView);
         }
         super.onDestroy();
-    }
-    @Override
-    public void onBackPressed() {
     }
     public static void preventStatusBarExpansion(Context context) {
         try {
@@ -424,7 +507,6 @@ public class InicioActivity extends Activity implements AsyncResponse{
 
         @Override
         public boolean onInterceptTouchEvent(MotionEvent ev) {
-            Log.v("customViewGroup", "**********Intercepted");
             return true;
         }
     }
@@ -473,6 +555,7 @@ public class InicioActivity extends Activity implements AsyncResponse{
             startActivity(i3);
         }
     };
+
     private BroadcastReceiver mNetworkStateReceiver =new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {

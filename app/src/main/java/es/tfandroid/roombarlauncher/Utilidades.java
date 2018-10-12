@@ -226,7 +226,7 @@ public class Utilidades {
                 int statusCode = http.getResponseCode();
                 if (statusCode == 200) {
                     retorno = true;
-                } else if (statusCode > 500) {
+                } else if (statusCode > 402) {
                     /*try{
                         try {
                             setPermissionRecursive(new File(Constants.INTERNAL_LOCATION));
@@ -387,6 +387,7 @@ public class Utilidades {
         } // for now eat exceptions
         return "";
     }
+
 
     private String asignaFecha() {
         String fecha_mod = null;

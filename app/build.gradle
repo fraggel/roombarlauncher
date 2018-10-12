@@ -5,7 +5,7 @@ android {
     buildToolsVersion "28.0.2"
     defaultConfig {
         applicationId "es.tfandroid.roombarlauncher"
-        minSdkVersion 19
+        minSdkVersion 21
         targetSdkVersion 26
        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -37,5 +37,4 @@ dependencies {
     provided 'eu.chainfire:libsuperuser:1.0.0.+'
     compile files('libs/mysql-connector-java-5.0.6-bin.jar')
     apk files('libs/mysql-connector-java-5.0.6-bin.jar')
-    compile 'com.google.android.gms:play-services-appindexing:8.4.0'
 }
