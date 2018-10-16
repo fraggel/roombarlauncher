@@ -83,12 +83,17 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
     View mContentView;
     View mlinearBotones;
     TextView mTextHotel;
+    TextView mTextHotelT;
     TextView mTimeTxt;
+    TextView mTimeTxtT;
     TextView mBatTxt;
+    TextView mBatTxtT;
+    ImageView mBatIcon;
+    ImageView mBatIconT;
     ImageButton buttonMenu;
     ImageButton buttonHome;
     ImageButton buttonBack;
-    ImageView mBatIcon;
+
     File newfilePicture = null;
     public static String urlSaved = null;
     FrameLayout mProgressDialog;
@@ -107,24 +112,35 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     WindowManager.LayoutParams.FLAG_FULLSCREEN);
             setContentView(R.layout.activity_fullscreen);
             String modo = getIntent().getStringExtra("modo");
-            if ("noconectado".equals(modo)) {
+            /*if ("noconectado".equals(modo)) {
                 Toast.makeText(this, "Navegación sin conexión", Toast.LENGTH_LONG).show();
-            }
+            }*/
             String buildprop = "";
             webview = (WebView) findViewById(R.id.fullscreen_content);
             mContentView = findViewById(R.id.fullscreen_content);
             mlinearBotones = findViewById(R.id.linearBotones);
             mTextHotel = (TextView) findViewById(R.id.textHotel);
+            mTextHotelT=(TextView) findViewById(R.id.textHotelT);
             mTimeTxt = (TextView) findViewById(R.id.date);
+            mTimeTxtT = (TextView) findViewById(R.id.dateT);
             mBatTxt = (TextView) findViewById(R.id.battery);
+            mBatTxtT = (TextView) findViewById(R.id.batteryT);
             mTimeTxt.setText(asignaHoras());
+            mTimeTxtT.setText(asignaHoras());
             mBatIcon = (ImageView)findViewById(R.id.iconBattery);
+            mBatIconT = (ImageView)findViewById(R.id.iconBatteryT);
             BatteryManager bm = (BatteryManager)getSystemService(BATTERY_SERVICE);
             mBatTxt.setText(bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)+"%");
-            if (Utilidades.getDpi(getApplicationContext()) > 240) {
+            mBatTxtT.setText(bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)+"%");
+            if (!Utilidades.esTablet(getApplicationContext())) {
                 mlinearBotones.setVisibility(View.GONE);
                 mTextHotel.setVisibility(View.VISIBLE);
+                mTextHotelT.setVisibility(View.VISIBLE);
+                findViewById(R.id.layout_barra_superior).setVisibility(View.VISIBLE);
+                findViewById(R.id.layout_barra_superior_tablet).setVisibility(View.GONE);
             } else {
+                findViewById(R.id.layout_barra_superior).setVisibility(View.GONE);
+                findViewById(R.id.layout_barra_superior_tablet).setVisibility(View.VISIBLE);
                 mContentView.setBackgroundColor(Color.parseColor("#e55427"));
                 TextView text = (TextView) findViewById(R.id.textHotel);
                 if (!"noconectado".equals(modo)) {
@@ -133,11 +149,15 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                 webview.setKeepScreenOn(true);
                 mlinearBotones.setVisibility(View.VISIBLE);
                 mTextHotel.setVisibility(View.VISIBLE);
+                mTextHotelT.setVisibility(View.VISIBLE);
                 mBatTxt.setVisibility(View.GONE);
+                mBatTxtT.setVisibility(View.GONE);
                 mBatIcon.setVisibility(View.GONE);
+                mBatIconT.setVisibility(View.GONE);
             }
             if (!"noconectado".equals(modo)) {
                 mTextHotel.setText(InicioActivity.terminalBean.hotel + InicioActivity.terminalBean.habitacion);
+                mTextHotelT.setText(InicioActivity.terminalBean.hotel + InicioActivity.terminalBean.habitacion);
             }
             try {
                 ((TextView) findViewById(R.id.date)).setText(asignaHoras());
@@ -158,7 +178,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
 
 
 
-            if (!(Utilidades.getDpi(getApplicationContext()) > 240)) {
+            if (Utilidades.esTablet(getApplicationContext())) {
                 webview.setOnTouchListener(new OnSwipeTouchListener() {
                     public boolean onSwipeTop() {
                         return true;
@@ -267,26 +287,46 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             ImageView mIconWifi = (ImageView) findViewById(R.id.iconWifi);
             ImageView mIconLan = (ImageView) findViewById(R.id.iconLan);
             //ImageView mIconTether = (ImageView) findViewById(R.id.iconTethering);
+            ImageView mIconNetworkT = (ImageView) findViewById(R.id.iconNetworkT);
+            ImageView mIconWifiT = (ImageView) findViewById(R.id.iconWifiT);
+            ImageView mIconLanT = (ImageView) findViewById(R.id.iconLanT);
+            //ImageView mIconTetherT = (ImageView) findViewById(R.id.iconTetheringT);
             if(wifi!=null && wifi.isConnectedOrConnecting() ) {
                 mIconNetwork.setVisibility(View.GONE);
                 mIconWifi.setVisibility(View.VISIBLE);
                 //mIconTether.setVisibility(View.GONE);
                 mIconLan.setVisibility(View.GONE);
+                mIconNetworkT.setVisibility(View.GONE);
+                mIconWifiT.setVisibility(View.VISIBLE);
+                //mIconTetherT.setVisibility(View.GONE);
+                mIconLanT.setVisibility(View.GONE);
             } else if(mobile != null && mobile.isConnectedOrConnecting() ) {
                 mIconNetwork.setVisibility(View.VISIBLE);
                 mIconWifi.setVisibility(View.GONE);
                 //mIconTether.setVisibility(View.GONE);
                 mIconLan.setVisibility(View.GONE);
+                mIconNetworkT.setVisibility(View.VISIBLE);
+                mIconWifiT.setVisibility(View.GONE);
+                //mIconTetherT.setVisibility(View.GONE);
+                mIconLanT.setVisibility(View.GONE);
             } else if (eth !=null && eth.isConnectedOrConnecting()){
                 mIconNetwork.setVisibility(View.GONE);
                 mIconWifi.setVisibility(View.GONE);
                 //mIconTether.setVisibility(View.GONE);
                 mIconLan.setVisibility(View.VISIBLE);
+                mIconNetworkT.setVisibility(View.GONE);
+                mIconWifiT.setVisibility(View.GONE);
+                //mIconTetherT.setVisibility(View.GONE);
+                mIconLanT.setVisibility(View.VISIBLE);
             }else{
                 mIconNetwork.setVisibility(View.GONE);
                 mIconWifi.setVisibility(View.GONE);
                 //mIconTether.setVisibility(View.GONE);
                 mIconLan.setVisibility(View.GONE);
+                mIconNetworkT.setVisibility(View.GONE);
+                mIconWifiT.setVisibility(View.GONE);
+                //mIconTetherT.setVisibility(View.GONE);
+                mIconLanT.setVisibility(View.GONE);
             }
         }
     };
@@ -379,6 +419,9 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                 ImageView mIconNetwork = (ImageView) findViewById(R.id.iconNetwork);
                 ImageView mIconWifi = (ImageView) findViewById(R.id.iconWifi);
                 //ImageView mIconTether = (ImageView) findViewById(R.id.iconTethering);
+                ImageView mIconNetworkT = (ImageView) findViewById(R.id.iconNetworkT);
+                ImageView mIconWifiT = (ImageView) findViewById(R.id.iconWifiT);
+                //ImageView mIconTetherT = (ImageView) findViewById(R.id.iconTetheringT);
                 if (wifiMgr.isWifiEnabled()) { // Wi-Fi adapter is ON
 
                     WifiInfo wifiInfo = wifiMgr.getConnectionInfo();
@@ -391,12 +434,16 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     //Utilidades.recuentoMB(false);
                     mIconNetwork.setVisibility(View.GONE);
                     mIconWifi.setVisibility(View.VISIBLE);
+                    mIconNetworkT.setVisibility(View.GONE);
+                    mIconWifiT.setVisibility(View.VISIBLE);
 
                 } else {
                     //Utilidades.recuentoMB(true);
                     //((TextView)findViewById(R.id.batteryLevel)).setText("Wifi off");
                     mIconNetwork.setVisibility(View.GONE);
                     mIconWifi.setVisibility(View.GONE);
+                    mIconNetworkT.setVisibility(View.GONE);
+                    mIconWifiT.setVisibility(View.GONE);
                 }
             }
         }
@@ -469,7 +516,10 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
         {
             if(event.getAction() == MotionEvent.ACTION_DOWN)
             {
-                v.setAlpha(.1f);
+                outAnimation = new AlphaAnimation(1f, .1f);
+                outAnimation.setDuration(100);
+                v.setAnimation(outAnimation);
+                v.startAnimation(outAnimation);
             }
             else
             {
@@ -480,19 +530,25 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
         if (id == R.id.buttonMenu)
         {
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                v.setAlpha(.1f);
+                outAnimation = new AlphaAnimation(1f, .1f);
+                outAnimation.setDuration(100);
+                v.setAnimation(outAnimation);
+                v.startAnimation(outAnimation);
             } else {
                 v.setAlpha(1f);
             }
         }
         if (id == R.id.buttonBack)
-            {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    v.setAlpha(.1f);
-                } else {
-                    v.setAlpha(1f);
-                }
+        {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                outAnimation = new AlphaAnimation(1f, .1f);
+                outAnimation.setDuration(100);
+                v.setAnimation(outAnimation);
+                v.startAnimation(outAnimation);
+            } else {
+                v.setAlpha(1f);
             }
+        }
         return false;
     }
 
@@ -627,9 +683,10 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     mlinearBotones.setVisibility(View.VISIBLE);
 
                 }*/
-                if (Utilidades.getDpi(getApplicationContext()) > 240) {
+                if (!Utilidades.esTablet(getApplicationContext())) {
                     mlinearBotones.setVisibility(View.GONE);
                     mTextHotel.setVisibility(View.VISIBLE);
+                    mTextHotelT.setVisibility(View.VISIBLE);
                 } else {
                     mContentView.setBackgroundColor(Color.parseColor("#e55427"));
                     TextView text = (TextView) findViewById(R.id.textHotel);
@@ -637,15 +694,21 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     webview.setKeepScreenOn(true);
                     mlinearBotones.setVisibility(View.VISIBLE);
                     mTextHotel.setVisibility(View.VISIBLE);
+                    mTextHotelT.setVisibility(View.VISIBLE);
                     mBatTxt.setVisibility(View.GONE);
+                    mBatTxtT.setVisibility(View.GONE);
                     mBatIcon.setVisibility(View.GONE);
+                    mBatIconT.setVisibility(View.GONE);
                 }
                 mTextHotel.setText(InicioActivity.terminalBean.hotel + InicioActivity.terminalBean.habitacion);
+                mTextHotelT.setText(InicioActivity.terminalBean.hotel + InicioActivity.terminalBean.habitacion);
             } catch (Exception e) {
                 Utilidades.escribirLogErrores(e);
             }
         }
     }
+
+
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
@@ -696,50 +759,24 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                 }
                 return true;
             case KeyEvent.KEYCODE_MENU:
-                    try {
-                        if (event.getEventTime() - event.getDownTime() > ViewConfiguration.getLongPressTimeout()) {
+                try {
+                    if (event.getEventTime() - event.getDownTime() > ViewConfiguration.getLongPressTimeout()) {
 
 
-                    AlertDialog.Builder builder = new AlertDialog.Builder(FullscreenActivity.this, R.style.MyCustomDialogTheme);
+                        AlertDialog.Builder builder = new AlertDialog.Builder(FullscreenActivity.this, R.style.MyCustomDialogTheme);
 
-                    builder.setTitle(getResources().getString(R.string.hint_password));
+                        builder.setTitle(getResources().getString(R.string.hint_password));
 
-                    // Set up the input
-                    final EditText input = new EditText(getApplicationContext());
-                    // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
-                    input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-                    builder.setView(input);
+                        // Set up the input
+                        final EditText input = new EditText(getApplicationContext());
+                        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+                        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                        builder.setView(input);
 
-                    // Set up the buttons
-                    builder.setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            String m_Text="12345678";
-                            try{
-                                m_Text=InicioActivity.terminalBean.getPassSistema();
-                            }catch(Exception e){
-
-                            }
-                            if (input.getText().toString().equals(m_Text)) {
-                                InicioActivity.unpreventStatusBarExpansion(getApplicationContext());
-                                Intent settings = new Intent(Settings.ACTION_SETTINGS);
-                                startActivity(settings);
-                            }
-                        }
-                    });
-                    builder.setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.cancel();
-                        }
-                    });
-                    final AlertDialog alertDialog = builder.create();
-                    alertDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-
-                    alertDialog.show();
-                    input.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-                        public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                            if ((event != null && (event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) || (actionId == EditorInfo.IME_ACTION_DONE)) {
+                        // Set up the buttons
+                        builder.setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
                                 String m_Text="12345678";
                                 try{
                                     m_Text=InicioActivity.terminalBean.getPassSistema();
@@ -747,29 +784,55 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
 
                                 }
                                 if (input.getText().toString().equals(m_Text)) {
+                                    InicioActivity.unpreventStatusBarExpansion(getApplicationContext());
                                     Intent settings = new Intent(Settings.ACTION_SETTINGS);
                                     startActivity(settings);
                                 }
                             }
-                            alertDialog.dismiss();
-                            return false;
+                        });
+                        builder.setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.cancel();
+                            }
+                        });
+                        final AlertDialog alertDialog = builder.create();
+                        alertDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+
+                        alertDialog.show();
+                        input.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                                if ((event != null && (event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) || (actionId == EditorInfo.IME_ACTION_DONE)) {
+                                    String m_Text="12345678";
+                                    try{
+                                        m_Text=InicioActivity.terminalBean.getPassSistema();
+                                    }catch(Exception e){
+
+                                    }
+                                    if (input.getText().toString().equals(m_Text)) {
+                                        Intent settings = new Intent(Settings.ACTION_SETTINGS);
+                                        startActivity(settings);
+                                    }
+                                }
+                                alertDialog.dismiss();
+                                return false;
+                            }
+                        });
+                        input.requestFocus();
+                        try {
+                            if (mProgressDialog != null) {
+                                outAnimation = new AlphaAnimation(1f, 0f);
+                                outAnimation.setDuration(100);
+                                mProgressDialog.setAnimation(outAnimation);
+                                mProgressDialog.setVisibility(View.GONE);
+                            }
+                        } catch (Exception e) {
+                            Utilidades.escribirLogErrores(e);
                         }
-                    });
-                    input.requestFocus();
-                    try {
-                        if (mProgressDialog != null) {
-                            outAnimation = new AlphaAnimation(1f, 0f);
-                            outAnimation.setDuration(100);
-                            mProgressDialog.setAnimation(outAnimation);
-                            mProgressDialog.setVisibility(View.GONE);
-                        }
-                    } catch (Exception e) {
-                        Utilidades.escribirLogErrores(e);
+                    } else {
+                        //TODO click action
                     }
-                } else {
-                    //TODO click action
-                }
-                    }catch(Exception e){
+                }catch(Exception e){
 
                 }
                 if (action == KeyEvent.ACTION_DOWN) {
@@ -890,7 +953,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                 String urlBase = "http://www.roombar.com";
                 if ((urlBase + "/App-RoomBar/01/06/01/").equals(urlDestino)) {
 
-                }else if ((urlBase + "/App-RoomBar/01/06/03/").equals(urlDestino)) {
+                }else if ((urlBase + "/App-RoomBar/01/06/03/").equals(urlDestino) && !Utilidades.esTablet(getApplicationContext())) {
                     //CAMARA
                     final String dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/picFolder/";
                     File newdir = new File(dir);
@@ -898,8 +961,10 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     String file = dir + Utilidades.asignaFechaCompleta() + ".jpg";
                     newfilePicture = new File(file);
                     File[] files = newdir.listFiles();
-                    for (int x = 0; x < files.length; x++) {
-                        files[x].delete();
+                    if(files!=null) {
+                        for (int x = 0; x < files.length; x++) {
+                            files[x].delete();
+                        }
                     }
                     try {
                         newfilePicture.createNewFile();
@@ -981,7 +1046,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     } catch (Exception e) {
                         Utilidades.escribirLogErrores(e);
                     }
-                }else if("http://www.roombar.com/App-RoomBar/01/06/06/".equals(urlDestino)){
+                }else if("http://www.roombar.com/App-RoomBar/01/06/06/".equals(urlDestino) && !Utilidades.esTablet(getApplicationContext())){
                     if(Utilidades.cam!=null){
                         Utilidades.flashLightOff(getApplicationContext());
                     }else{
@@ -998,7 +1063,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                         Utilidades.escribirLogErrores(e);
                     }
                     retorno=true;
-                } else if (urlDestino.contains("tel:")) {
+                } else if (urlDestino.contains("tel:") && !Utilidades.esTablet(getApplicationContext())) {
                     //Telefono
                     boolean invalid = false;
                     String tel = urlDestino.split("tel:")[1];

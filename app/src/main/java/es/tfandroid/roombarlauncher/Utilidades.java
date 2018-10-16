@@ -388,6 +388,11 @@ public class Utilidades {
         return "";
     }
 
+    public static boolean esTablet(Context context) {
+            return Utilidades.getDpi(context) <= 240;
+
+    }
+
 
     private String asignaFecha() {
         String fecha_mod = null;

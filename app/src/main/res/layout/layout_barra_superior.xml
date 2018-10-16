@@ -4,6 +4,7 @@
     android:layout_height="20dp"
     android:paddingTop="1dp"
     android:paddingBottom="1dp"
+    android:id="@+id/layout_barra_superior"
     android:orientation="horizontal"
     android:gravity="center_vertical">
     <TextView
@@ -13,16 +14,15 @@
         android:id="@+id/textHotel"
         android:visibility="visible"
         android:textSize="15dp"
-        android:paddingRight="2dp"
-        android:paddingLeft="7dp"/>
+        android:layout_marginEnd="7dp"
+        android:layout_marginStart="7dp"/>
     <ImageView
         android:layout_width="15dp"
         android:layout_height="17dp"
         android:id="@+id/iconWifi"
         android:visibility="gone"
         android:background="@drawable/wifi"
-        android:paddingRight="2dp"
-        android:paddingLeft="2dp"
+        android:layout_marginEnd="7dp"
         android:layout_toStartOf="@id/iconNetwork"/>
     <ImageView
         android:layout_width="15dp"
@@ -30,8 +30,7 @@
         android:id="@+id/iconNetwork"
         android:visibility="gone"
         android:background="@drawable/network"
-        android:paddingRight="2dp"
-        android:paddingLeft="2dp"
+        android:layout_marginEnd="7dp"
         android:layout_toStartOf="@id/iconLan"/>
     <ImageView
         android:layout_width="15dp"
@@ -39,8 +38,7 @@
         android:id="@+id/iconLan"
         android:visibility="gone"
         android:background="@drawable/networklan"
-        android:paddingRight="2dp"
-        android:paddingLeft="2dp"
+        android:layout_marginEnd="7dp"
         android:layout_toStartOf="@id/iconBattery"/>
     <ImageView
         android:layout_width="15dp"
@@ -48,8 +46,6 @@
         android:id="@+id/iconBattery"
         android:visibility="visible"
         android:background="@drawable/battery"
-        android:paddingRight="2dp"
-        android:paddingLeft="2dp"
         android:layout_toStartOf="@id/battery"/>
     <TextView
         android:text="50"
@@ -58,8 +54,6 @@
         android:id="@+id/battery"
         android:visibility="visible"
         android:textSize="15dp"
-        android:paddingRight="2dp"
-        android:paddingLeft="2dp"
         android:layout_toStartOf="@id/iconBlank"/>
     <ImageView
         android:layout_width="15dp"
@@ -67,16 +61,14 @@
         android:id="@+id/iconBlank"
         android:visibility="visible"
         android:background="@android:color/transparent"
-        android:paddingRight="2dp"
-        android:paddingLeft="2dp"
         android:layout_toStartOf="@id/date"/>
     <TextView
         android:id="@+id/date"
         android:layout_width="wrap_content"
         android:layout_height="17dp"
-        android:paddingLeft="2dp"
-        android:paddingRight="7dp"
+        android:layout_marginEnd="7dp"
         android:text="00:00"
+        android:textStyle="bold"
         android:textSize="15dp"
         android:visibility="visible"
         android:layout_alignParentRight="true"/>

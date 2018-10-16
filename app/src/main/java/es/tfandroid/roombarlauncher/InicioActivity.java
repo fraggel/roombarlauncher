@@ -99,7 +99,7 @@ public class InicioActivity extends Activity implements AsyncResponse{
         setContentView(R.layout.activity_inicio);
 
         //requiere root
-        /*Utilidades.eliminarNotificacionies(getApplicationContext());
+        Utilidades.eliminarNotificacionies(getApplicationContext());
         Utilidades.actualizarPermisos();
         new File(Constants.SERVER_LOCATION).mkdirs();
         new File(Environment.getExternalStorageDirectory() + "/droidphp/conf/").mkdirs();
@@ -110,7 +110,7 @@ public class InicioActivity extends Activity implements AsyncResponse{
         new File(Environment.getExternalStorageDirectory() + "/droidphp/logs/").mkdirs();
         new File(Environment.getExternalStorageDirectory() + "/droidphp/sessions/").mkdirs();
         Utilidades.borrarFicheros();
-        */
+
         registrarReceivers();
 
         Utilidades.activarDatos(getApplicationContext());
@@ -164,7 +164,7 @@ public class InicioActivity extends Activity implements AsyncResponse{
         textView.setText(rom+" "+version+" apk "+verCodeApp);
             preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
-            /*try {
+            try {
             ZipInputStream zipInputStream = null;
             try {
                 zipInputStream = new ZipInputStream(getApplicationContext().getAssets().open("data.zip"));
@@ -201,7 +201,7 @@ public class InicioActivity extends Activity implements AsyncResponse{
             }
         }catch(Exception e){
             Utilidades.escribirLogErrores(e);
-        }*/
+        }
         VersionThread asyncTask = new VersionThread(getApplicationContext());
         asyncTask.delegate = InicioActivity.this;
         asyncTask.execute(imei,imei2,mac,mac2);
@@ -410,7 +410,6 @@ public class InicioActivity extends Activity implements AsyncResponse{
         }else {
             if(primeraEjecucion) {
                 primeraEjecucion=false;
-                Toast.makeText(this, "Esperamos 30 segundos", Toast.LENGTH_LONG).show();
                 handler.postDelayed(runnable, 30000);
             }else{
                 handler.postDelayed(runnable, 100);
