@@ -1184,9 +1184,17 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                 if (testUrl.equals(failingUrl)) {
                     //Mostrar pantalla que diga que no se puede mostrar nada, que compruebe que hay conexión a internet,
                     //Toast.makeText(FullscreenActivity.this, "No hay conexión para la pantalla inicial", Toast.LENGTH_SHORT).show();
+                    //if("net::ERR_INTERNET_DISCONNECTED".equals(description)){
+                        ImageView mImageNoConnection = (ImageView) findViewById(R.id.imageViewFull);
+                        if(!new File(Environment.getExternalStorageDirectory() + "/logo.png").exists()){
+                            mImageNoConnection.setImageResource(R.drawable.inicio);
+                        }else {
+                            mImageNoConnection.setImageURI(Uri.fromFile(new File(Environment.getExternalStorageDirectory() + "/logo.png")));
+                        }
+                        Toast.makeText(FullscreenActivity.this, "No hay conexión", Toast.LENGTH_SHORT).show();
+                    //}
                 } else {
                     if (!Utilidades.comprobarConexion(failingUrl, getApplicationContext())) {
-                        Toast.makeText(FullscreenActivity.this, "No hay conexión", Toast.LENGTH_SHORT).show();
                         errorLoading = true;
                     } else {
                         errorLoading = false;
