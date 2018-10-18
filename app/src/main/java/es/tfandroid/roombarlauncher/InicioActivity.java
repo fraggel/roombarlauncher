@@ -407,7 +407,12 @@ public class InicioActivity extends Activity implements AsyncResponse{
             }
 
         }else {
+            if(primeraEjecucion) {
+                primeraEjecucion=false;
+                handler.postDelayed(runnable, 30000);
+            }else{
                 handler.postDelayed(runnable, 100);
+            }
         }
 
     }

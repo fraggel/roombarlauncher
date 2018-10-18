@@ -17,7 +17,7 @@
         android:layout_marginEnd="2dp"
         android:layout_marginStart="7dp"/>
     <ImageView
-        android:layout_width="20dp"
+        android:layout_width="40dp"
         android:layout_height="40dp"
         android:id="@+id/iconWifiT"
         android:visibility="gone"
@@ -25,7 +25,7 @@
         android:layout_marginEnd="14dp"
         android:layout_toStartOf="@id/iconNetworkT"/>
     <ImageView
-        android:layout_width="20dp"
+        android:layout_width="40dp"
         android:layout_height="40dp"
         android:id="@+id/iconNetworkT"
         android:visibility="gone"
@@ -33,7 +33,7 @@
         android:layout_marginEnd="14dp"
         android:layout_toStartOf="@id/iconLanT"/>
     <ImageView
-        android:layout_width="20dp"
+        android:layout_width="40dp"
         android:layout_height="40dp"
         android:id="@+id/iconLanT"
         android:visibility="gone"
@@ -41,7 +41,7 @@
         android:layout_marginEnd="14dp"
         android:layout_toStartOf="@id/iconBatteryT"/>
     <ImageView
-        android:layout_width="20dp"
+        android:layout_width="40dp"
         android:layout_height="40dp"
         android:id="@+id/iconBatteryT"
         android:visibility="gone"
@@ -56,7 +56,7 @@
         android:textSize="20dp"
         android:layout_toStartOf="@id/iconBlankT"/>
     <ImageView
-        android:layout_width="20dp"
+        android:layout_width="40dp"
         android:layout_height="40dp"
         android:id="@+id/iconBlankT"
         android:visibility="visible"

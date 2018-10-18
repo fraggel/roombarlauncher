@@ -144,7 +144,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                 if (!"noconectado".equals(modo)) {
                     text.setText(InicioActivity.terminalBean.hotel + InicioActivity.terminalBean.habitacion);
                 }
-                webview.setKeepScreenOn(true);
+                //webview.setKeepScreenOn(true);
                 mlinearBotones.setVisibility(View.VISIBLE);
                 mTextHotel.setVisibility(View.VISIBLE);
                 mTextHotelT.setVisibility(View.VISIBLE);
@@ -703,7 +703,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     mContentView.setBackgroundColor(Color.parseColor("#e55427"));
                     TextView text = (TextView) findViewById(R.id.textHotel);
                     text.setText(InicioActivity.terminalBean.hotel + InicioActivity.terminalBean.habitacion);
-                    webview.setKeepScreenOn(true);
+                    //webview.setKeepScreenOn(true);
                     mlinearBotones.setVisibility(View.VISIBLE);
                     mTextHotel.setVisibility(View.VISIBLE);
                     mTextHotelT.setVisibility(View.VISIBLE);
@@ -1202,7 +1202,6 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                         }else {
                             mImageNoConnection.setImageURI(Uri.fromFile(new File(Environment.getExternalStorageDirectory() + "/logo.png")));
                         }
-                        Toast.makeText(FullscreenActivity.this, "No hay conexión", Toast.LENGTH_SHORT).show();
                     //}
                 } else {
                     if (!Utilidades.comprobarConexion(failingUrl, getApplicationContext())) {
