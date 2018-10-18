@@ -361,6 +361,11 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             } catch (Exception e) {
                 Utilidades.escribirLogErrores(e);
             }
+            try {
+                ((TextView) findViewById(R.id.dateT)).setText(asignaHoras());
+            } catch (Exception e) {
+                Utilidades.escribirLogErrores(e);
+            }
         }
     };
     public String asignaHoras(){
