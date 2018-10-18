@@ -88,7 +88,6 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
     TextView mTimeTxtT;
     TextView mBatTxt;
     TextView mBatTxtT;
-    ImageView mBatIcon;
     ImageView mBatIconT;
     ImageButton buttonMenu;
     ImageButton buttonHome;
@@ -127,7 +126,6 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             mBatTxtT = (TextView) findViewById(R.id.batteryT);
             mTimeTxt.setText(asignaHoras());
             mTimeTxtT.setText(asignaHoras());
-            mBatIcon = (ImageView)findViewById(R.id.iconBattery);
             mBatIconT = (ImageView)findViewById(R.id.iconBatteryT);
             BatteryManager bm = (BatteryManager)getSystemService(BATTERY_SERVICE);
             mBatTxt.setText(bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)+"%");
@@ -152,7 +150,6 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                 mTextHotelT.setVisibility(View.VISIBLE);
                 mBatTxt.setVisibility(View.GONE);
                 mBatTxtT.setVisibility(View.GONE);
-                mBatIcon.setVisibility(View.GONE);
                 mBatIconT.setVisibility(View.GONE);
             }
             if (!"noconectado".equals(modo)) {
@@ -231,7 +228,6 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
     }
 
     private void registerReceivers() {
-        this.registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         this.registerReceiver(this.mTime, new IntentFilter(Intent.ACTION_TIME_TICK));
         this.registerReceiver(this.mBt, new IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED));
         this.registerReceiver(this.mBt, new IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED));
@@ -239,7 +235,10 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
         this.registerReceiver(this.mBtC, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
         this.registerReceiver(this.mWifi, new IntentFilter(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION));
         this.registerReceiver(this.mNetworkStateReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+        this.registerReceiver(this.mBatteryStatus,new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
     }
+
+
 
     @Override
     protected void onRestart() {
@@ -269,6 +268,30 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
         super.onSaveInstanceState(outState);
     }
 
+    private  BroadcastReceiver mBatteryStatus =new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            try {
+                ImageView mIconBat = (ImageView) findViewById(R.id.iconBattery);
+                ImageView mIconBatCharging = (ImageView) findViewById(R.id.iconBatteryCharging);
+                int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
+                ((TextView) findViewById(R.id.battery)).setText(String.valueOf(level) + "%");
+                int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+                if( status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                        status == BatteryManager.BATTERY_STATUS_FULL){
+                    mIconBat.setVisibility(View.GONE);
+                    mIconBatCharging.setVisibility(View.VISIBLE);
+                }else{
+                    mIconBat.setVisibility(View.VISIBLE);
+                    mIconBatCharging.setVisibility(View.GONE);
+                }
+
+            }catch(Exception e){
+                Utilidades.escribirLogErrores(e);
+            }
+        }
+    };
+
     private BroadcastReceiver mNetworkStateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -279,10 +302,10 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     context.getSystemService(Context.CONNECTIVITY_SERVICE);
 
             // check for wifi
-            final android.net.NetworkInfo wifi = connMgr.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-            final android.net.NetworkInfo eth = connMgr.getNetworkInfo(ConnectivityManager.TYPE_ETHERNET);
+            android.net.NetworkInfo wifi = connMgr.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+            android.net.NetworkInfo eth = connMgr.getNetworkInfo(ConnectivityManager.TYPE_ETHERNET);
             // check for mobile data
-            final android.net.NetworkInfo mobile = connMgr.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+            android.net.NetworkInfo mobile = connMgr.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
             ImageView mIconNetwork = (ImageView) findViewById(R.id.iconNetwork);
             ImageView mIconWifi = (ImageView) findViewById(R.id.iconWifi);
             ImageView mIconLan = (ImageView) findViewById(R.id.iconLan);
@@ -330,17 +353,6 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             }
         }
     };
-    private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context ctxt, Intent intent) {
-            try {
-                int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
-                ((TextView) findViewById(R.id.battery)).setText(String.valueOf(level) + "%");
-            } catch (Exception e) {
-                Utilidades.escribirLogErrores(e);
-            }
-        }
-    };
     private BroadcastReceiver mTime = new BroadcastReceiver() {
         @Override
         public void onReceive(Context ctxt, Intent intent) {
@@ -371,7 +383,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
         return aux;
 
     }
-    private final BroadcastReceiver mBt = new BroadcastReceiver() {
+    private BroadcastReceiver mBt = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
@@ -385,7 +397,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             }
         }
     };
-    private final BroadcastReceiver mBtC = new BroadcastReceiver() {
+    private BroadcastReceiver mBtC = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
@@ -410,7 +422,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             }
         }
     };
-    private final BroadcastReceiver mWifi = new BroadcastReceiver() {
+    private BroadcastReceiver mWifi = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
@@ -697,7 +709,6 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     mTextHotelT.setVisibility(View.VISIBLE);
                     mBatTxt.setVisibility(View.GONE);
                     mBatTxtT.setVisibility(View.GONE);
-                    mBatIcon.setVisibility(View.GONE);
                     mBatIconT.setVisibility(View.GONE);
                 }
                 mTextHotel.setText(InicioActivity.terminalBean.hotel + InicioActivity.terminalBean.habitacion);
@@ -887,13 +898,13 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
     public void onPause() {
         super.onPause();
         //this.urlSaved=webview.getUrl();
-        this.unregisterReceiver(this.mBatInfoReceiver);
         this.unregisterReceiver(this.mTime);
         this.unregisterReceiver(this.mBt);
         this.unregisterReceiver(this.mBtC);
         this.unregisterReceiver(this.mWifi);
         //this.unregisterReceiver(this.mHome);
         this.unregisterReceiver(this.mNetworkStateReceiver);
+        this.unregisterReceiver(this.mBatteryStatus);
     }
 
     private class SendMailTask extends AsyncTask<Message, Void, Void> {

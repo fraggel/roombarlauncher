@@ -210,7 +210,6 @@ public class InicioActivity extends Activity implements AsyncResponse{
     private void registrarReceivers() {
         this.registerReceiver(this.mNetworkStateReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
         this.registerReceiver(this.mWifi, new IntentFilter(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION));
-
     }
 
     @Override
@@ -408,13 +407,7 @@ public class InicioActivity extends Activity implements AsyncResponse{
             }
 
         }else {
-            if(primeraEjecucion) {
-                primeraEjecucion=false;
-                handler.postDelayed(runnable, 30000);
-            }else{
                 handler.postDelayed(runnable, 100);
-            }
-
         }
 
     }
