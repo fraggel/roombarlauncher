@@ -298,7 +298,17 @@ public class Utilidades {
             Utilidades.escribirLogErrores(ex);
         }
     }
-
+   public static boolean isTethering(Context context){
+        boolean isTethering=false;
+        try {
+            WifiManager wm = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+            Method meth = (Method) wm.getClass().getDeclaredMethod("isWifiApEnabled");
+            isTethering=(Boolean)meth.invoke(wm);
+        }catch(Exception e){
+            Utilidades.escribirLogErrores(e);
+        }
+        return isTethering;
+    }
     public static void cambiarBarraEstado(Context context, TerminalBean terminalBean) {
         try {
             String hot = Settings.System.getString(context.getContentResolver(), "status_bar_hotel");

@@ -20,6 +20,14 @@
     <ImageView
         android:layout_width="25dp"
         android:layout_height="17dp"
+        android:id="@+id/iconTethering"
+        android:visibility="gone"
+        android:background="@drawable/tethering"
+        android:layout_marginEnd="7dp"
+        android:layout_toStartOf="@id/iconWifi"/>
+    <ImageView
+        android:layout_width="25dp"
+        android:layout_height="17dp"
         android:id="@+id/iconWifi"
         android:visibility="gone"
         android:background="@drawable/wifi"

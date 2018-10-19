@@ -51,6 +51,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.Method;
 import java.util.Calendar;
 import java.util.Properties;
 import java.util.regex.Matcher;
@@ -300,6 +301,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             asyncTask.execute(InicioActivity.imei, InicioActivity.imei2, InicioActivity.mac, InicioActivity.mac2);
             ConnectivityManager connMgr = (ConnectivityManager)
                     context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            boolean isTethering = Utilidades.isTethering(context);
 
             // check for wifi
             android.net.NetworkInfo wifi = connMgr.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
@@ -309,7 +311,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             ImageView mIconNetwork = (ImageView) findViewById(R.id.iconNetwork);
             ImageView mIconWifi = (ImageView) findViewById(R.id.iconWifi);
             ImageView mIconLan = (ImageView) findViewById(R.id.iconLan);
-            //ImageView mIconTether = (ImageView) findViewById(R.id.iconTethering);
+            ImageView mIconTether = (ImageView) findViewById(R.id.iconTethering);
             ImageView mIconNetworkT = (ImageView) findViewById(R.id.iconNetworkT);
             ImageView mIconWifiT = (ImageView) findViewById(R.id.iconWifiT);
             ImageView mIconLanT = (ImageView) findViewById(R.id.iconLanT);
@@ -317,16 +319,16 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             if(wifi!=null && wifi.isConnectedOrConnecting() ) {
                 mIconNetwork.setVisibility(View.GONE);
                 mIconWifi.setVisibility(View.VISIBLE);
-                //mIconTether.setVisibility(View.GONE);
                 mIconLan.setVisibility(View.GONE);
                 mIconNetworkT.setVisibility(View.GONE);
                 mIconWifiT.setVisibility(View.VISIBLE);
-                //mIconTetherT.setVisibility(View.GONE);
                 mIconLanT.setVisibility(View.GONE);
+                mIconTether.setVisibility(View.GONE);
+                //mIconTetherT.setVisibility(View.GONE);
             } else if(mobile != null && mobile.isConnectedOrConnecting() ) {
                 mIconNetwork.setVisibility(View.VISIBLE);
                 mIconWifi.setVisibility(View.GONE);
-                //mIconTether.setVisibility(View.GONE);
+                mIconTether.setVisibility(View.GONE);
                 mIconLan.setVisibility(View.GONE);
                 mIconNetworkT.setVisibility(View.VISIBLE);
                 mIconWifiT.setVisibility(View.GONE);
@@ -335,7 +337,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             } else if (eth !=null && eth.isConnectedOrConnecting()){
                 mIconNetwork.setVisibility(View.GONE);
                 mIconWifi.setVisibility(View.GONE);
-                //mIconTether.setVisibility(View.GONE);
+                mIconTether.setVisibility(View.GONE);
                 mIconLan.setVisibility(View.VISIBLE);
                 mIconNetworkT.setVisibility(View.GONE);
                 mIconWifiT.setVisibility(View.GONE);
@@ -344,12 +346,15 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             }else{
                 mIconNetwork.setVisibility(View.GONE);
                 mIconWifi.setVisibility(View.GONE);
-                //mIconTether.setVisibility(View.GONE);
+                mIconTether.setVisibility(View.GONE);
                 mIconLan.setVisibility(View.GONE);
                 mIconNetworkT.setVisibility(View.GONE);
                 mIconWifiT.setVisibility(View.GONE);
                 //mIconTetherT.setVisibility(View.GONE);
                 mIconLanT.setVisibility(View.GONE);
+            }
+            if(isTethering){
+                mIconTether.setVisibility(View.VISIBLE);
             }
         }
     };
