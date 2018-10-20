@@ -173,7 +173,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             buttonMenu.setOnTouchListener(this);
             buttonBack.setOnTouchListener(this);
             registerReceivers();
-
+            updateIcons();
 
 
             if (Utilidades.esTablet(getApplicationContext())) {
@@ -239,7 +239,65 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
         this.registerReceiver(this.mBatteryStatus,new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
     }
 
+    public void updateIcons() {
+        ConnectivityManager connMgr = (ConnectivityManager)
+                getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        boolean isTethering = Utilidades.isTethering(getApplicationContext());
 
+        // check for wifi
+        android.net.NetworkInfo wifi = connMgr.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        android.net.NetworkInfo eth = connMgr.getNetworkInfo(ConnectivityManager.TYPE_ETHERNET);
+        // check for mobile data
+        android.net.NetworkInfo mobile = connMgr.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+        ImageView mIconNetwork = (ImageView) this.findViewById(R.id.iconNetwork);
+        ImageView mIconWifi = (ImageView) this.findViewById(R.id.iconWifi);
+        ImageView mIconLan = (ImageView) this.findViewById(R.id.iconLan);
+        ImageView mIconTether = (ImageView) this.findViewById(R.id.iconTethering);
+        ImageView mIconNetworkT = (ImageView) this.findViewById(R.id.iconNetworkT);
+        ImageView mIconWifiT = (ImageView) this.findViewById(R.id.iconWifiT);
+        ImageView mIconLanT = (ImageView) this.findViewById(R.id.iconLanT);
+        //ImageView mIconTetherT = (ImageView) findViewById(R.id.iconTetheringT);
+        if(wifi!=null && wifi.isConnectedOrConnecting() ) {
+            mIconNetwork.setVisibility(View.GONE);
+            mIconWifi.setVisibility(View.VISIBLE);
+            mIconLan.setVisibility(View.GONE);
+            mIconNetworkT.setVisibility(View.GONE);
+            mIconWifiT.setVisibility(View.VISIBLE);
+            mIconLanT.setVisibility(View.GONE);
+            mIconTether.setVisibility(View.GONE);
+            //mIconTetherT.setVisibility(View.GONE);
+        } else if(mobile != null && mobile.isConnectedOrConnecting() ) {
+            mIconNetwork.setVisibility(View.VISIBLE);
+            mIconWifi.setVisibility(View.GONE);
+            mIconTether.setVisibility(View.GONE);
+            mIconLan.setVisibility(View.GONE);
+            mIconNetworkT.setVisibility(View.VISIBLE);
+            mIconWifiT.setVisibility(View.GONE);
+            //mIconTetherT.setVisibility(View.GONE);
+            mIconLanT.setVisibility(View.GONE);
+        } else if (eth !=null && eth.isConnectedOrConnecting()){
+            mIconNetwork.setVisibility(View.GONE);
+            mIconWifi.setVisibility(View.GONE);
+            mIconTether.setVisibility(View.GONE);
+            mIconLan.setVisibility(View.VISIBLE);
+            mIconNetworkT.setVisibility(View.GONE);
+            mIconWifiT.setVisibility(View.GONE);
+            //mIconTetherT.setVisibility(View.GONE);
+            mIconLanT.setVisibility(View.VISIBLE);
+        }else{
+            mIconNetwork.setVisibility(View.GONE);
+            mIconWifi.setVisibility(View.GONE);
+            mIconTether.setVisibility(View.GONE);
+            mIconLan.setVisibility(View.GONE);
+            mIconNetworkT.setVisibility(View.GONE);
+            mIconWifiT.setVisibility(View.GONE);
+            //mIconTetherT.setVisibility(View.GONE);
+            mIconLanT.setVisibility(View.GONE);
+        }
+        if(isTethering){
+            mIconTether.setVisibility(View.VISIBLE);
+        }
+    }
 
     @Override
     protected void onRestart() {
@@ -299,63 +357,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             VersionThread asyncTask = new VersionThread(getApplicationContext());
             asyncTask.delegate = FullscreenActivity.this;
             asyncTask.execute(InicioActivity.imei, InicioActivity.imei2, InicioActivity.mac, InicioActivity.mac2);
-            ConnectivityManager connMgr = (ConnectivityManager)
-                    context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            boolean isTethering = Utilidades.isTethering(context);
-
-            // check for wifi
-            android.net.NetworkInfo wifi = connMgr.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-            android.net.NetworkInfo eth = connMgr.getNetworkInfo(ConnectivityManager.TYPE_ETHERNET);
-            // check for mobile data
-            android.net.NetworkInfo mobile = connMgr.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
-            ImageView mIconNetwork = (ImageView) findViewById(R.id.iconNetwork);
-            ImageView mIconWifi = (ImageView) findViewById(R.id.iconWifi);
-            ImageView mIconLan = (ImageView) findViewById(R.id.iconLan);
-            ImageView mIconTether = (ImageView) findViewById(R.id.iconTethering);
-            ImageView mIconNetworkT = (ImageView) findViewById(R.id.iconNetworkT);
-            ImageView mIconWifiT = (ImageView) findViewById(R.id.iconWifiT);
-            ImageView mIconLanT = (ImageView) findViewById(R.id.iconLanT);
-            //ImageView mIconTetherT = (ImageView) findViewById(R.id.iconTetheringT);
-            if(wifi!=null && wifi.isConnectedOrConnecting() ) {
-                mIconNetwork.setVisibility(View.GONE);
-                mIconWifi.setVisibility(View.VISIBLE);
-                mIconLan.setVisibility(View.GONE);
-                mIconNetworkT.setVisibility(View.GONE);
-                mIconWifiT.setVisibility(View.VISIBLE);
-                mIconLanT.setVisibility(View.GONE);
-                mIconTether.setVisibility(View.GONE);
-                //mIconTetherT.setVisibility(View.GONE);
-            } else if(mobile != null && mobile.isConnectedOrConnecting() ) {
-                mIconNetwork.setVisibility(View.VISIBLE);
-                mIconWifi.setVisibility(View.GONE);
-                mIconTether.setVisibility(View.GONE);
-                mIconLan.setVisibility(View.GONE);
-                mIconNetworkT.setVisibility(View.VISIBLE);
-                mIconWifiT.setVisibility(View.GONE);
-                //mIconTetherT.setVisibility(View.GONE);
-                mIconLanT.setVisibility(View.GONE);
-            } else if (eth !=null && eth.isConnectedOrConnecting()){
-                mIconNetwork.setVisibility(View.GONE);
-                mIconWifi.setVisibility(View.GONE);
-                mIconTether.setVisibility(View.GONE);
-                mIconLan.setVisibility(View.VISIBLE);
-                mIconNetworkT.setVisibility(View.GONE);
-                mIconWifiT.setVisibility(View.GONE);
-                //mIconTetherT.setVisibility(View.GONE);
-                mIconLanT.setVisibility(View.VISIBLE);
-            }else{
-                mIconNetwork.setVisibility(View.GONE);
-                mIconWifi.setVisibility(View.GONE);
-                mIconTether.setVisibility(View.GONE);
-                mIconLan.setVisibility(View.GONE);
-                mIconNetworkT.setVisibility(View.GONE);
-                mIconWifiT.setVisibility(View.GONE);
-                //mIconTetherT.setVisibility(View.GONE);
-                mIconLanT.setVisibility(View.GONE);
-            }
-            if(isTethering){
-                mIconTether.setVisibility(View.VISIBLE);
-            }
+            updateIcons();
         }
     };
     private BroadcastReceiver mTime = new BroadcastReceiver() {
@@ -389,7 +391,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
         }else{
             aux=aux+String.valueOf(minutos);
         }
-
+        updateIcons();
         return aux;
 
     }
@@ -467,8 +469,11 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     mIconNetworkT.setVisibility(View.GONE);
                     mIconWifiT.setVisibility(View.GONE);
                 }
+
             }
+            updateIcons();
         }
+
     };
 
     @Override
@@ -723,6 +728,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                 }
                 mTextHotel.setText(InicioActivity.terminalBean.hotel + InicioActivity.terminalBean.habitacion);
                 mTextHotelT.setText(InicioActivity.terminalBean.hotel + InicioActivity.terminalBean.habitacion);
+                updateIcons();
             } catch (Exception e) {
                 Utilidades.escribirLogErrores(e);
             }
