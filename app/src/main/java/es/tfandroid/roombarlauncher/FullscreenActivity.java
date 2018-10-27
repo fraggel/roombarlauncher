@@ -21,7 +21,9 @@ import android.os.AsyncTask;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.PowerManager;
 import android.os.StrictMode;
+import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.text.InputType;
@@ -52,6 +54,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
+import java.security.Key;
 import java.util.Calendar;
 import java.util.Properties;
 import java.util.regex.Matcher;
@@ -93,7 +96,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
     ImageButton buttonMenu;
     ImageButton buttonHome;
     ImageButton buttonBack;
-
+    ImageButton buttonPower;
     File newfilePicture = null;
     public static String urlSaved = null;
     FrameLayout mProgressDialog;
@@ -165,13 +168,16 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             buttonMenu = (ImageButton) findViewById(R.id.buttonMenu);
             buttonHome = (ImageButton) findViewById(R.id.buttonHome);
             buttonBack = (ImageButton) findViewById(R.id.buttonBack);
+            buttonPower= (ImageButton) findViewById(R.id.buttonPower);
             buttonMenu.setOnClickListener(this);
             buttonHome.setOnClickListener(this);
             buttonBack.setOnClickListener(this);
+            buttonPower.setOnClickListener(this);
             buttonMenu.setOnLongClickListener(this);
             buttonHome.setOnTouchListener(this);
             buttonMenu.setOnTouchListener(this);
             buttonBack.setOnTouchListener(this);
+            buttonPower.setOnTouchListener(this);
             registerReceivers();
             updateIcons();
 
@@ -535,6 +541,26 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
         if (id == R.id.buttonBack) {
             this.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BACK));
         }
+        if (id==R.id.buttonPower){
+            turnOffScreen();
+            //this.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_POWER));
+        }
+    }
+    private void turnOffScreen(){
+
+        try{
+            Class c = Class.forName("android.os.PowerManager");
+            PowerManager mPowerManager = (PowerManager) this.getSystemService(Context.POWER_SERVICE);
+            for(Method m : c.getDeclaredMethods()){
+                if(m.getName().equals("goToSleep")){
+                    m.setAccessible(true);
+                    if(m.getParameterTypes().length == 1){
+                        m.invoke(mPowerManager,SystemClock.uptimeMillis()-2);
+                    }
+                }
+            }
+        } catch (Exception e){
+        }
     }
     public boolean onTouch(View v, MotionEvent event)
     {
@@ -566,6 +592,17 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             }
         }
         if (id == R.id.buttonBack)
+        {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                outAnimation = new AlphaAnimation(1f, .1f);
+                outAnimation.setDuration(100);
+                v.setAnimation(outAnimation);
+                v.startAnimation(outAnimation);
+            } else {
+                v.setAlpha(1f);
+            }
+        }
+        if (id == R.id.buttonPower)
         {
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
                 outAnimation = new AlphaAnimation(1f, .1f);

@@ -16,7 +16,7 @@
         android:layout_width="match_parent"
         android:layout_height="100dp"
         android:id="@+id/linearBotones"
-        android:weightSum="3"
+        android:weightSum="4"
         android:visibility="gone"
         android:layout_marginBottom="14dp">
 
@@ -48,6 +48,15 @@
             android:id="@+id/buttonMenu"
             android:scaleType="fitCenter"
             android:src="@drawable/buttonmenu"
+            android:adjustViewBounds="false"
+            android:layout_weight="1"
+            android:background="@android:color/transparent" />
+        <ImageButton
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/buttonPower"
+            android:scaleType="fitCenter"
+            android:src="@drawable/power"
             android:adjustViewBounds="false"
             android:layout_weight="1"
             android:background="@android:color/transparent" />

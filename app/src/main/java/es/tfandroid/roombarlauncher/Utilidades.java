@@ -288,6 +288,7 @@ public class Utilidades {
     }
 
     public static void setMobileDataState(boolean mobileDataEnabled, Context context) {
+        habilitarRoaming(true,context);
         try {
             TelephonyManager telephonyService = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
 
@@ -300,7 +301,21 @@ public class Utilidades {
             Utilidades.escribirLogErrores(ex);
         }
     }
-   public static boolean isTethering(Context context){
+
+    private static void habilitarRoaming(boolean b,Context context) {
+        Settings.Global.putInt(context.getContentResolver(), Settings.Global.DATA_ROAMING, 1);
+        try {
+            java.lang.Process proc = Runtime.getRuntime().exec("su");
+            OutputStream outputStream = proc.getOutputStream();
+            outputStream.write("settings put global data_roaming0 1\n".getBytes());
+            outputStream.write("settings put global data_roaming1 1\n".getBytes());
+            outputStream.write("settings put global data_roaming2 1\n".getBytes());
+            outputStream.flush();
+            outputStream.close();
+        }catch(Exception e){Utilidades.escribirLogErrores(e);}
+    }
+
+    public static boolean isTethering(Context context){
         boolean isTethering=false;
         try {
             WifiManager wm = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
@@ -401,7 +416,7 @@ public class Utilidades {
     }
 
     public static boolean esTablet(Context context) {
-            return Utilidades.getDpi(context) <= 240;
+            return (Utilidades.getDpi(context) <= 240);
 
     }
 
