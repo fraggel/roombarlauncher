@@ -303,7 +303,10 @@ public class Utilidades {
     }
 
     private static void habilitarRoaming(boolean b,Context context) {
-        Settings.Global.putInt(context.getContentResolver(), Settings.Global.DATA_ROAMING, 1);
+        try {
+            Settings.Global.putInt(context.getContentResolver(), Settings.Global.DATA_ROAMING, 1);
+        }catch(Exception e){Utilidades.escribirLogErrores(e);}
+
         try {
             java.lang.Process proc = Runtime.getRuntime().exec("su");
             OutputStream outputStream = proc.getOutputStream();

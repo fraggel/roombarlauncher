@@ -316,12 +316,12 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
 
         super.onResume();
         try {
-            registerReceivers();
-            VersionThread asyncTask = new VersionThread(getApplicationContext());
-            asyncTask.delegate = FullscreenActivity.this;
-            asyncTask.execute(InicioActivity.imei, InicioActivity.imei2, InicioActivity.mac, InicioActivity.mac2);
-            webview.reload();
-            webview.onResume();
+                registerReceivers();
+                VersionThread asyncTask = new VersionThread(getApplicationContext());
+                asyncTask.delegate = FullscreenActivity.this;
+                asyncTask.execute(InicioActivity.imei, InicioActivity.imei2, InicioActivity.mac, InicioActivity.mac2);
+                webview.reload();
+                webview.onResume();
         } catch (Exception e) {
             Utilidades.escribirLogErrores(e);
         }
@@ -766,6 +766,9 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                 mTextHotel.setText(InicioActivity.terminalBean.hotel + InicioActivity.terminalBean.habitacion);
                 mTextHotelT.setText(InicioActivity.terminalBean.hotel + InicioActivity.terminalBean.habitacion);
                 updateIcons();
+                //TODO fraggel
+                ImageView mImageNoConnection = (ImageView) findViewById(R.id.imageViewFull);
+                mImageNoConnection.setVisibility(View.GONE);
             } catch (Exception e) {
                 Utilidades.escribirLogErrores(e);
             }
