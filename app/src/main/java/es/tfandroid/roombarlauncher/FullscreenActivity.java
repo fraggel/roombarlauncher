@@ -148,7 +148,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                 if (!"noconectado".equals(modo)) {
                     text.setText(InicioActivity.terminalBean.hotel + InicioActivity.terminalBean.habitacion);
                 }
-                //webview.setKeepScreenOn(true);
+                webview.setKeepScreenOn(true);
                 mlinearBotones.setVisibility(View.VISIBLE);
                 mTextHotel.setVisibility(View.VISIBLE);
                 mTextHotelT.setVisibility(View.VISIBLE);
@@ -303,6 +303,12 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
         if(isTethering){
             mIconTether.setVisibility(View.VISIBLE);
         }
+        try{
+            mTextHotel = (TextView) findViewById(R.id.textHotel);
+            mTextHotelT=(TextView) findViewById(R.id.textHotelT);
+            mTextHotel.setText(InicioActivity.terminalBean.hotel + InicioActivity.terminalBean.habitacion);
+            mTextHotelT.setText(InicioActivity.terminalBean.hotel + InicioActivity.terminalBean.habitacion);
+        }catch(Exception e){}
     }
 
     @Override
@@ -313,15 +319,14 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
 
     @Override
     public void onResume() {
-
         super.onResume();
         try {
-                registerReceivers();
-                VersionThread asyncTask = new VersionThread(getApplicationContext());
-                asyncTask.delegate = FullscreenActivity.this;
-                asyncTask.execute(InicioActivity.imei, InicioActivity.imei2, InicioActivity.mac, InicioActivity.mac2);
-                webview.reload();
-                webview.onResume();
+                    registerReceivers();
+                    VersionThread asyncTask = new VersionThread(getApplicationContext());
+                    asyncTask.delegate = FullscreenActivity.this;
+                    asyncTask.execute(InicioActivity.imei, InicioActivity.imei2, InicioActivity.mac, InicioActivity.mac2);
+                    webview.reload();
+                    webview.onResume();
         } catch (Exception e) {
             Utilidades.escribirLogErrores(e);
         }
@@ -755,7 +760,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     mContentView.setBackgroundColor(Color.parseColor("#e55427"));
                     TextView text = (TextView) findViewById(R.id.textHotel);
                     text.setText(InicioActivity.terminalBean.hotel + InicioActivity.terminalBean.habitacion);
-                    //webview.setKeepScreenOn(true);
+                    webview.setKeepScreenOn(true);
                     mlinearBotones.setVisibility(View.VISIBLE);
                     mTextHotel.setVisibility(View.VISIBLE);
                     mTextHotelT.setVisibility(View.VISIBLE);
@@ -954,13 +959,29 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
     public void onPause() {
         super.onPause();
         //this.urlSaved=webview.getUrl();
-        this.unregisterReceiver(this.mTime);
-        this.unregisterReceiver(this.mBt);
-        this.unregisterReceiver(this.mBtC);
-        this.unregisterReceiver(this.mWifi);
-        //this.unregisterReceiver(this.mHome);
-        this.unregisterReceiver(this.mNetworkStateReceiver);
-        this.unregisterReceiver(this.mBatteryStatus);
+        try {
+            this.unregisterReceiver(this.mTime);
+        }catch(Exception e ){}
+
+        try {
+            this.unregisterReceiver(this.mBt);
+        }catch(Exception e ){}
+
+        try {
+            this.unregisterReceiver(this.mBtC);
+        }catch(Exception e ){}
+
+        try {
+            this.unregisterReceiver(this.mWifi);
+        }catch(Exception e ){}
+
+        try {
+            this.unregisterReceiver(this.mNetworkStateReceiver);
+        }catch(Exception e ){}
+            //this.unregisterReceiver(this.mHome);
+        try {
+            this.unregisterReceiver(this.mBatteryStatus);
+        }catch(Exception e ){}
     }
 
     private class SendMailTask extends AsyncTask<Message, Void, Void> {

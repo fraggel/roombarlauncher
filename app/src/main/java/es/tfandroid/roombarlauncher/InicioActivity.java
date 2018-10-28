@@ -11,6 +11,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
@@ -39,6 +40,7 @@ import android.view.WindowManager;
 import android.view.animation.AlphaAnimation;
 import android.view.inputmethod.EditorInfo;
 import android.webkit.WebSettings;
+import android.webkit.WebView;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -50,6 +52,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.URI;
 import java.text.SimpleDateFormat;
@@ -73,6 +76,7 @@ public class InicioActivity extends Activity implements AsyncResponse{
     public static String rom = "";
     public static float version;
     public static String pathRecovery = "";
+    int screenOn=0;
     Handler handler = new Handler();
     TextView textView=null;
     ImageView imageView=null;
@@ -206,10 +210,36 @@ public class InicioActivity extends Activity implements AsyncResponse{
         asyncTask.delegate = InicioActivity.this;
         asyncTask.execute(imei,imei2,mac,mac2);
     }
+    private BroadcastReceiver mScreenOn = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context ctxt, Intent intent) {
+            try {
+                String action = intent.getAction();
+                if (Intent.ACTION_SCREEN_ON.equals(action)) {
+                    screenOn+=1;
+                    if(screenOn<2){
+                        Intent intent2 = new Intent(getApplicationContext(), BlackActivity.class);
+                        startActivity(intent2);
+                    }
+                    if(screenOn>=2) {
 
+                        java.lang.Process proc = Runtime.getRuntime().exec("su");
+                        OutputStream outputStream = proc.getOutputStream();
+                        outputStream.write("reboot\n".getBytes());
+                        outputStream.flush();
+                        outputStream.close();
+
+                    }
+                }
+            }catch(Exception e){Utilidades.escribirLogErrores(e);}
+        }
+    };
     private void registrarReceivers() {
         this.registerReceiver(this.mNetworkStateReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
         this.registerReceiver(this.mWifi, new IntentFilter(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION));
+        if(Utilidades.esTablet(getApplicationContext())) {
+            this.registerReceiver(this.mScreenOn, new IntentFilter(Intent.ACTION_SCREEN_ON));
+        }
     }
 
     @Override
@@ -420,10 +450,19 @@ public class InicioActivity extends Activity implements AsyncResponse{
     protected void onDestroy() {
         try{
             unregisterReceiver(this.mNetworkStateReceiver);
+        }catch(Exception e){
+            Utilidades.escribirLogErrores(e);
+        }
+        try{
             unregisterReceiver(this.mWifi);
         }catch(Exception e){
             Utilidades.escribirLogErrores(e);
         }
+        try{
+            if(Utilidades.esTablet(getApplicationContext())) {
+                unregisterReceiver(this.mScreenOn);
+            }
+        }catch(Exception e){}
         if (blockingView!=null) {
             WindowManager manager = ((WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE));
             manager.removeView(blockingView);
