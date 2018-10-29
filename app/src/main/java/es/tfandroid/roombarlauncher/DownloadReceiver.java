@@ -31,8 +31,8 @@ public class DownloadReceiver extends BroadcastReceiver {
                             nombreFichero = InicioActivity.terminalBean.urlROM.split("/")[InicioActivity.terminalBean.urlROM.split("/").length - 1];
                             nombreFichero.trim().replaceAll("\r\n","");
                             String cad="";
-                            cad= Environment.getExternalStorageDirectory() + "/droidphp/"+nombreFichero;
-                            cad=cad.replaceAll(Environment.getExternalStorageDirectory().getAbsolutePath(),InicioActivity.pathRecovery);
+                            cad= Constants.EXTERNAL_STORAGE + "/droidphp/"+nombreFichero;
+                            cad=cad.replaceAll(Constants.EXTERNAL_STORAGE,InicioActivity.pathRecovery);
                             BufferedOutputStream bos=new BufferedOutputStream(new FileOutputStream(new File("/cache/recovery/extendedcommand")));
 
                             bos.write(("run_program(\"/sbin/umount\",\""+InicioActivity.pathRecovery+"\");\n").getBytes());
@@ -71,7 +71,7 @@ public class DownloadReceiver extends BroadcastReceiver {
                         OutputStream outputStream = proc.getOutputStream();
                         outputStream.write("mount -o,remount rw /system\n".getBytes());
                         outputStream.write("rm -rf /system/priv-app/roombarlauncher/roombarlauncher.apk\n".getBytes());
-                        outputStream.write(("cp -r "+Environment.getExternalStorageDirectory() + "/droidphp/roombarlauncher.apk /system/priv-app/roombarlauncher/roombarlauncher.apk\n").getBytes());
+                        outputStream.write(("cp -r "+Constants.EXTERNAL_STORAGE + "/droidphp/roombarlauncher.apk /system/priv-app/roombarlauncher/roombarlauncher.apk\n").getBytes());
                         outputStream.write("chmod 644 /system/priv-app/roombarlauncher/roombarlauncher.apk\n".getBytes());
                         outputStream.write("rm -rf /cache/recovery/openrecoveryscript\n".getBytes());
                         outputStream.write("rm -rf /cache/recovery/extendedcommand\n".getBytes());
@@ -86,8 +86,8 @@ public class DownloadReceiver extends BroadcastReceiver {
                             nombreFichero = "logos.zip";
                             nombreFichero.trim().replaceAll("\r\n","");
                             String cad="";
-                            cad= Environment.getExternalStorageDirectory() + "/droidphp/"+nombreFichero;
-                            cad=cad.replaceAll(Environment.getExternalStorageDirectory().getAbsolutePath(),InicioActivity.pathRecovery);
+                            cad= Constants.EXTERNAL_STORAGE + "/droidphp/"+nombreFichero;
+                            cad=cad.replaceAll(Constants.EXTERNAL_STORAGE,InicioActivity.pathRecovery);
                             BufferedOutputStream bos=new BufferedOutputStream(new FileOutputStream(new File("/cache/recovery/extendedcommand")));
 
                             bos.write(("run_program(\"/sbin/umount\",\""+InicioActivity.pathRecovery+"\");\n").getBytes());
@@ -120,8 +120,8 @@ public class DownloadReceiver extends BroadcastReceiver {
                             nombreFichero = "logos.zip";
                             nombreFichero.trim().replaceAll("\r\n","");
                             String cad="";
-                            cad= Environment.getExternalStorageDirectory() + "/droidphp/"+nombreFichero;
-                            cad=cad.replaceAll(Environment.getExternalStorageDirectory().getAbsolutePath(),InicioActivity.pathRecovery);
+                            cad= Constants.EXTERNAL_STORAGE + "/droidphp/"+nombreFichero;
+                            cad=cad.replaceAll(Constants.EXTERNAL_STORAGE,InicioActivity.pathRecovery);
                             BufferedOutputStream bos=new BufferedOutputStream(new FileOutputStream(new File("/cache/recovery/extendedcommand")));
 
                             bos.write(("run_program(\"/sbin/umount\",\""+InicioActivity.pathRecovery+"\");\n").getBytes());

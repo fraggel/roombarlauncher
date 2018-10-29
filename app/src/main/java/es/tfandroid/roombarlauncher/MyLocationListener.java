@@ -97,7 +97,7 @@ public class MyLocationListener implements LocationListener {
                 } catch(Exception e){
 
                     try{
-                        File n=new File(Environment.getExternalStorageDirectory()+"/gps.log");
+                        File n=new File(Constants.EXTERNAL_STORAGE+"/gps.log");
                         FileOutputStream fos=new FileOutputStream(n,true);
                         JSONObject jsonObject = new JSONObject();
                         jsonObject.put("imei",InicioActivity.terminalBean.imei);

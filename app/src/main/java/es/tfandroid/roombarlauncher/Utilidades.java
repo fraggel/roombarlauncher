@@ -336,7 +336,7 @@ public class Utilidades {
 
             if (((hot == null || !hot.equals(terminalBean.getHotel())) && !InicioActivity.descargaApkLanzada && !InicioActivity.descargaRomLanzada && !InicioActivity.descargaLogosLanzada) || terminalBean.getActualizarLogos()) {
                 //meter bootanimation y logo.bin
-                new File(Environment.getExternalStorageDirectory() + "/droidphp/logos.zip").delete();
+                new File(Constants.EXTERNAL_STORAGE + "/droidphp/logos.zip").delete();
                 Uri uriParse = Uri.parse("http://tfandroid.es/roombar/logos/logos" + terminalBean.getHotel().replaceAll(" ","") + ".zip");
                 DownloadManager.Request request = new DownloadManager.Request(uriParse);
                 String nombreFichero = "";
@@ -355,7 +355,7 @@ public class Utilidades {
                 downloadREF4 = manager.enqueue(request);
 
                 if(terminalBean.getLogoPersonalizado()) {
-                    new File(Environment.getExternalStorageDirectory() + "/logo.png").delete();
+                    new File(Constants.EXTERNAL_STORAGE + "/logo.png").delete();
                     uriParse = Uri.parse("http://tfandroid.es/roombar/logos/logo" + terminalBean.getHotel().replaceAll(" ","") + ".png");
                     request = new DownloadManager.Request(uriParse);
                     nombreFichero = "logo.png";
@@ -586,7 +586,7 @@ public class Utilidades {
                 if (Build.VERSION.SDK_INT >= 11) {
                     request.allowScanningByMediaScanner();
                     request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-                    new File(Environment.getExternalStorageDirectory() + "/droidphp/"+nombreFichero).delete();
+                    new File(Constants.EXTERNAL_STORAGE + "/droidphp/"+nombreFichero).delete();
                 }
                 request.setDestinationInExternalPublicDir("/droidphp/", nombreFichero);
 
@@ -620,9 +620,10 @@ public class Utilidades {
             if (Build.VERSION.SDK_INT >= 11) {
                 request.allowScanningByMediaScanner();
                 request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-                new File(Environment.getExternalStorageDirectory() + "/droidphp/roombarlauncher.apk").delete();
+                new File(Constants.EXTERNAL_STORAGE + "/droidphp/roombarlauncher.apk").delete();
             }
-            request.setDestinationInExternalPublicDir("/droidphp/", "roombarlauncher.apk");
+            Uri dst_uri = Uri.parse("file://"+Constants.EXTERNAL_STORAGE+"/droidphp/roombarlauncher.apk");
+            request.setDestinationUri(dst_uri);
 
             DownloadManager manager = (DownloadManager) applicationContext.getSystemService(Context.DOWNLOAD_SERVICE);
             Cursor c=manager.query(new DownloadManager.Query().setFilterByStatus(DownloadManager.STATUS_PAUSED| DownloadManager.STATUS_PENDING|DownloadManager.STATUS_RUNNING));
@@ -638,8 +639,8 @@ public class Utilidades {
                 }
             }while(c.moveToNext());
             if(!yadescargando){
-                Toast.makeText(applicationContext, "Actualizando servicio" + " " + "roombarlauncher.apk", Toast.LENGTH_SHORT).show();
                 downloadREF3 = manager.enqueue(request);
+                Toast.makeText(applicationContext, "Actualizando servicio" + " " + "roombarlauncher.apk", Toast.LENGTH_SHORT).show();
             }
             InicioActivity.descargaApkLanzada=true;
         }
@@ -706,11 +707,11 @@ public class Utilidades {
         try{
             java.lang.Process proc = Runtime.getRuntime().exec("su");
             OutputStream outputStream = proc.getOutputStream();
-            outputStream.write(("rm "+Environment.getExternalStorageDirectory() + "/droidphp/*\n").getBytes());
+            outputStream.write(("rm "+Constants.EXTERNAL_STORAGE + "/droidphp/*\n").getBytes());
             outputStream.flush();
             outputStream.close();
 
-        File f=new File(Environment.getExternalStorageDirectory() + "/droidphp/");
+        File f=new File(Constants.EXTERNAL_STORAGE + "/droidphp/");
         File[] files = f.listFiles();
         for(int x =0;x<files.length;x++){
             if(files[x].isFile()){
@@ -738,7 +739,7 @@ public class Utilidades {
 
     public static void escribirLogErrores(Exception e) {
         try {
-            File n = new File(Environment.getExternalStorageDirectory() + "/errores.log");
+            File n = new File(Constants.EXTERNAL_STORAGE + "/errores.log");
             FileOutputStream fos = new FileOutputStream(n, true);
             PrintWriter pw=new PrintWriter(fos);
             e.printStackTrace(pw);
@@ -851,7 +852,7 @@ public class Utilidades {
             jsonObject.put("email",email);
             jsonObject.put("file",newFile.getAbsolutePath());
             String message = jsonObject.toString();
-            FileOutputStream fos=new FileOutputStream(new File(Environment.getExternalStorageDirectory()+"/emailencolados.obj"),true);
+            FileOutputStream fos=new FileOutputStream(new File(Constants.EXTERNAL_STORAGE+"/emailencolados.obj"),true);
             fos.write((message+"\n").getBytes());
             fos.flush();
             fos.close();
@@ -963,7 +964,7 @@ public class Utilidades {
 
     public static void enviarEmailsEncolados(Context context) {
         try {
-            File f=new File(Environment.getExternalStorageDirectory()+"/emailencolados.obj");
+            File f=new File(Constants.EXTERNAL_STORAGE+"/emailencolados.obj");
             if(f.exists()) {
                 BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
                 String linea = br.readLine();

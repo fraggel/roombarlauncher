@@ -101,18 +101,17 @@ public class InicioActivity extends Activity implements AsyncResponse{
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_inicio);
-
         //requiere root
         Utilidades.eliminarNotificacionies(getApplicationContext());
         Utilidades.actualizarPermisos();
         new File(Constants.SERVER_LOCATION).mkdirs();
-        new File(Environment.getExternalStorageDirectory() + "/droidphp/conf/").mkdirs();
-        new File(Environment.getExternalStorageDirectory() + "/droidphp/hosts/").mkdirs();
-        new File(Environment.getExternalStorageDirectory() + "/droidphp/conf/nginx/conf/").mkdirs();
-        new File(Environment.getExternalStorageDirectory() + "/droidphp/hosts/nginx/").mkdirs();
-        new File(Environment.getExternalStorageDirectory() + "/droidphp/tmp/").mkdirs();
-        new File(Environment.getExternalStorageDirectory() + "/droidphp/logs/").mkdirs();
-        new File(Environment.getExternalStorageDirectory() + "/droidphp/sessions/").mkdirs();
+        new File(Constants.EXTERNAL_STORAGE + "/droidphp/conf/").mkdirs();
+        new File(Constants.EXTERNAL_STORAGE + "/droidphp/hosts/").mkdirs();
+        new File(Constants.EXTERNAL_STORAGE + "/droidphp/conf/nginx/conf/").mkdirs();
+        new File(Constants.EXTERNAL_STORAGE + "/droidphp/hosts/nginx/").mkdirs();
+        new File(Constants.EXTERNAL_STORAGE + "/droidphp/tmp/").mkdirs();
+        new File(Constants.EXTERNAL_STORAGE + "/droidphp/logs/").mkdirs();
+        new File(Constants.EXTERNAL_STORAGE + "/droidphp/sessions/").mkdirs();
         Utilidades.borrarFicheros();
 
         registrarReceivers();
@@ -121,10 +120,10 @@ public class InicioActivity extends Activity implements AsyncResponse{
 
         view= (ViewGroup) findViewById(android.R.id.content);
         imageView=(ImageView)findViewById(R.id.imageView);
-        if(!new File(Environment.getExternalStorageDirectory() + "/logo.png").exists()){
+        if(!new File(Constants.EXTERNAL_STORAGE + "/logo.png").exists()){
             imageView.setImageResource(R.drawable.inicio);
         }else {
-            imageView.setImageURI(Uri.fromFile(new File(Environment.getExternalStorageDirectory() + "/logo.png")));
+            imageView.setImageURI(Uri.fromFile(new File(Constants.EXTERNAL_STORAGE + "/logo.png")));
         }
 
         preventStatusBarExpansion(this);
@@ -214,21 +213,23 @@ public class InicioActivity extends Activity implements AsyncResponse{
         @Override
         public void onReceive(Context ctxt, Intent intent) {
             try {
-                String action = intent.getAction();
-                if (Intent.ACTION_SCREEN_ON.equals(action)) {
-                    screenOn+=1;
-                    if(screenOn<2){
-                        Intent intent2 = new Intent(getApplicationContext(), BlackActivity.class);
-                        startActivity(intent2);
-                    }
-                    if(screenOn>=2) {
+                if(Utilidades.esTablet(getApplicationContext())) {
+                    String action = intent.getAction();
+                    if (Intent.ACTION_SCREEN_ON.equals(action)) {
+                        screenOn += 1;
+                        if (screenOn < 2) {
+                            Intent intent2 = new Intent(getApplicationContext(), BlackActivity.class);
+                            startActivity(intent2);
+                        }
+                        if (screenOn >= 2) {
 
-                        java.lang.Process proc = Runtime.getRuntime().exec("su");
-                        OutputStream outputStream = proc.getOutputStream();
-                        outputStream.write("reboot\n".getBytes());
-                        outputStream.flush();
-                        outputStream.close();
+                            java.lang.Process proc = Runtime.getRuntime().exec("su");
+                            OutputStream outputStream = proc.getOutputStream();
+                            outputStream.write("reboot\n".getBytes());
+                            outputStream.flush();
+                            outputStream.close();
 
+                        }
                     }
                 }
             }catch(Exception e){Utilidades.escribirLogErrores(e);}
@@ -387,10 +388,10 @@ public class InicioActivity extends Activity implements AsyncResponse{
     @Override
     public void onResume(){
         try{
-            if(!new File(Environment.getExternalStorageDirectory() + "/logo.png").exists()){
+            if(!new File(Constants.EXTERNAL_STORAGE + "/logo.png").exists()){
                 imageView.setImageResource(R.drawable.inicio);
             }else {
-                imageView.setImageURI(Uri.fromFile(new File(Environment.getExternalStorageDirectory() + "/logo.png")));
+                imageView.setImageURI(Uri.fromFile(new File(Constants.EXTERNAL_STORAGE + "/logo.png")));
             }
             Utilidades.getImei(getApplicationContext());
             registrarReceivers();
@@ -552,14 +553,14 @@ public class InicioActivity extends Activity implements AsyncResponse{
 
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == OVERLAY_PERMISSION_REQ_CODE) {
+        //if (requestCode == OVERLAY_PERMISSION_REQ_CODE) {
             /*if (!Settings.canDrawOverlays(this)) {
                 Toast.makeText(this, "User can access system settings without this permission!", Toast.LENGTH_SHORT).show();
             }
             else
             { */disableStatusBar();
             //}
-        }
+        //}
     }
 
     protected void disableStatusBar() {

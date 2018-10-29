@@ -321,12 +321,12 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
     public void onResume() {
         super.onResume();
         try {
-                    registerReceivers();
-                    VersionThread asyncTask = new VersionThread(getApplicationContext());
-                    asyncTask.delegate = FullscreenActivity.this;
-                    asyncTask.execute(InicioActivity.imei, InicioActivity.imei2, InicioActivity.mac, InicioActivity.mac2);
-                    webview.reload();
-                    webview.onResume();
+                registerReceivers();
+                VersionThread asyncTask = new VersionThread(getApplicationContext());
+                asyncTask.delegate = FullscreenActivity.this;
+                asyncTask.execute(InicioActivity.imei, InicioActivity.imei2, InicioActivity.mac, InicioActivity.mac2);
+                webview.reload();
+                webview.onResume();
         } catch (Exception e) {
             Utilidades.escribirLogErrores(e);
         }
@@ -927,9 +927,10 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     //String urlBase="http://localhost:8080";
                     String urlBase = "http://www.roombar.com";
                     webview.clearHistory();
-
                     webview.loadUrl((urlBase + "/App-RoomBar/01/"));
-
+                    VersionThread asyncTask = new VersionThread(getApplicationContext());
+                    asyncTask.delegate = FullscreenActivity.this;
+                    asyncTask.execute(InicioActivity.imei, InicioActivity.imei2, InicioActivity.mac, InicioActivity.mac2);
                 }
                 return true;
             default:
@@ -1043,7 +1044,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
 
                 }else if ((urlBase + "/App-RoomBar/01/06/03/").equals(urlDestino) && !Utilidades.esTablet(getApplicationContext())) {
                     //CAMARA
-                    final String dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/picFolder/";
+                    final String dir = Constants.EXTERNAL_STORAGE + "/picFolder/";
                     File newdir = new File(dir);
                     newdir.mkdirs();
                     String file = dir + Utilidades.asignaFechaCompleta() + ".jpg";
@@ -1274,10 +1275,10 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     //Toast.makeText(FullscreenActivity.this, "No hay conexión para la pantalla inicial", Toast.LENGTH_SHORT).show();
                     //if("net::ERR_INTERNET_DISCONNECTED".equals(description)){
                         ImageView mImageNoConnection = (ImageView) findViewById(R.id.imageViewFull);
-                        if(!new File(Environment.getExternalStorageDirectory() + "/logo.png").exists()){
+                        if(!new File(Constants.EXTERNAL_STORAGE + "/logo.png").exists()){
                             mImageNoConnection.setImageResource(R.drawable.inicio);
                         }else {
-                            mImageNoConnection.setImageURI(Uri.fromFile(new File(Environment.getExternalStorageDirectory() + "/logo.png")));
+                            mImageNoConnection.setImageURI(Uri.fromFile(new File(Constants.EXTERNAL_STORAGE + "/logo.png")));
                         }
                     //}
                 } else {

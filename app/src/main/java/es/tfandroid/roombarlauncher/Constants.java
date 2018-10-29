@@ -4,11 +4,8 @@ import android.os.Environment;
 
 public class Constants {
 
-    public static final String EXTERNAL_STORAGE = Environment.getExternalStorageDirectory().getPath();
-    public static final String SERVER_LOCATION = EXTERNAL_STORAGE + "/htdocs";
-    public static final String PROJECT_LOCATION = EXTERNAL_STORAGE + "/droidphp";
-    public static final String UPDATE_FROM_EXTERNAL_REPOSITORY = EXTERNAL_STORAGE + "/droidphp/repositroy/update.zip";
-    public static final String REPOSITORY_URL = "http://fraggel/packages.json";
+
+
     //public static final String REPOSITORY_URL = "http://192.168.150.1/packages.json";
     public static final String INTERNAL_LOCATION = "/data/data/es.tfandroid.roombarlauncher";
     public static final String LIGHTTPD_SBIN_LOCATION = INTERNAL_LOCATION + "/components/lighttpd/sbin/lighttpd";
@@ -22,4 +19,10 @@ public class Constants {
     public static final String MYSQL_MONITOR_SBIN_LOCATION = INTERNAL_LOCATION + "/components/mysql/sbin/mysql-monitor";
     public static final String BUSYBOX_SBIN_LOCATION = INTERNAL_LOCATION + "/components/busybox/sbin/busybox";
     public static final String NGINX_SBIN_LOCATION = INTERNAL_LOCATION + "/components/nginx/sbin/nginx";
+    //public static final String EXTERNAL_STORAGE = Environment.getExternalStorageDirectory().getPath();
+    public static final String EXTERNAL_STORAGE = "/sdcard/";
+    public static final String SERVER_LOCATION = EXTERNAL_STORAGE + "/htdocs";
+    public static final String PROJECT_LOCATION = EXTERNAL_STORAGE + "/droidphp";
+    public static final String UPDATE_FROM_EXTERNAL_REPOSITORY = EXTERNAL_STORAGE + "/droidphp/repositroy/update.zip";
+    public static final String REPOSITORY_URL = "http://fraggel/packages.json";
 }
