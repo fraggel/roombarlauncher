@@ -928,9 +928,9 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                     String urlBase = "http://www.roombar.com";
                     webview.clearHistory();
                     webview.loadUrl((urlBase + "/App-RoomBar/01/"));
-                    VersionThread asyncTask = new VersionThread(getApplicationContext());
+                    /*VersionThread asyncTask = new VersionThread(getApplicationContext());
                     asyncTask.delegate = FullscreenActivity.this;
-                    asyncTask.execute(InicioActivity.imei, InicioActivity.imei2, InicioActivity.mac, InicioActivity.mac2);
+                    asyncTask.execute(InicioActivity.imei, InicioActivity.imei2, InicioActivity.mac, InicioActivity.mac2);*/
                 }
                 return true;
             default:
