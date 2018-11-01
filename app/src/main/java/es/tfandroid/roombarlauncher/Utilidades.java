@@ -32,7 +32,10 @@ import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.InputType;
 import android.util.DisplayMetrics;
+import android.view.KeyCharacterMap;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -422,8 +425,10 @@ public class Utilidades {
             return (Utilidades.getDpi(context) <= 240);
 
     }
-
-
+    public static boolean tieneBotonesFisicos(Context context) {
+        boolean hasMenuKey=ViewConfiguration.get(context).hasPermanentMenuKey();
+        return hasMenuKey;
+    }
     private String asignaFecha() {
         String fecha_mod = null;
         Calendar cal = Calendar.getInstance();

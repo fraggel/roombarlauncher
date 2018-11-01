@@ -86,6 +86,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
     //ActionBar actionBar = null;
     View mContentView;
     View mlinearBotones;
+    View mlinearBotonesM;
     TextView mTextHotel;
     TextView mTextHotelT;
     TextView mTimeTxt;
@@ -96,6 +97,9 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
     ImageButton buttonMenu;
     ImageButton buttonHome;
     ImageButton buttonBack;
+    ImageButton buttonMenuM;
+    ImageButton buttonHomeM;
+    ImageButton buttonBackM;
     ImageButton buttonPower;
     File newfilePicture = null;
     public static String urlSaved = null;
@@ -122,6 +126,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             webview = (WebView) findViewById(R.id.fullscreen_content);
             mContentView = findViewById(R.id.fullscreen_content);
             mlinearBotones = findViewById(R.id.linearBotones);
+            mlinearBotonesM=findViewById(R.id.linearBotonesMovil);
             mTextHotel = (TextView) findViewById(R.id.textHotel);
             mTextHotelT=(TextView) findViewById(R.id.textHotelT);
             mTimeTxt = (TextView) findViewById(R.id.date);
@@ -136,6 +141,10 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             mBatTxtT.setText(bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)+"%");
             if (!Utilidades.esTablet(getApplicationContext())) {
                 mlinearBotones.setVisibility(View.GONE);
+                if(!Utilidades.tieneBotonesFisicos(getApplicationContext())){
+                    mlinearBotonesM.setVisibility(View.VISIBLE);
+
+                }
                 mTextHotel.setVisibility(View.VISIBLE);
                 mTextHotelT.setVisibility(View.VISIBLE);
                 findViewById(R.id.layout_barra_superior).setVisibility(View.VISIBLE);
@@ -165,18 +174,28 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             } catch (Exception e) {
                 Utilidades.escribirLogErrores(e);
             }
-            buttonMenu = (ImageButton) findViewById(R.id.buttonMenu);
+            buttonMenu  = (ImageButton) findViewById(R.id.buttonMenu);
             buttonHome = (ImageButton) findViewById(R.id.buttonHome);
             buttonBack = (ImageButton) findViewById(R.id.buttonBack);
+            buttonMenuM  = (ImageButton) findViewById(R.id.buttonMenuM);
+            buttonHomeM = (ImageButton) findViewById(R.id.buttonHomeM);
+            buttonBackM = (ImageButton) findViewById(R.id.buttonBackM);
             buttonPower= (ImageButton) findViewById(R.id.buttonPower);
             buttonMenu.setOnClickListener(this);
             buttonHome.setOnClickListener(this);
             buttonBack.setOnClickListener(this);
+            buttonMenuM.setOnClickListener(this);
+            buttonHomeM.setOnClickListener(this);
+            buttonBackM.setOnClickListener(this);
             buttonPower.setOnClickListener(this);
             buttonMenu.setOnLongClickListener(this);
+            buttonMenuM.setOnLongClickListener(this);
             buttonHome.setOnTouchListener(this);
             buttonMenu.setOnTouchListener(this);
             buttonBack.setOnTouchListener(this);
+            buttonHomeM.setOnTouchListener(this);
+            buttonMenuM.setOnTouchListener(this);
+            buttonBackM.setOnTouchListener(this);
             buttonPower.setOnTouchListener(this);
             registerReceivers();
             updateIcons();
@@ -537,13 +556,13 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
     @Override
     public void onClick(View v) {
         int id = v.getId();
-        if (id == R.id.buttonHome) {
+        if (id == R.id.buttonHome || id == R.id.buttonHomeM) {
             this.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_HOME));
         }
-        if (id == R.id.buttonMenu) {
+        if (id == R.id.buttonMenu || id == R.id.buttonMenuM) {
             this.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MENU));
         }
-        if (id == R.id.buttonBack) {
+        if (id == R.id.buttonBack || id == R.id.buttonBackM) {
             this.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BACK));
         }
         if (id==R.id.buttonPower){
@@ -570,7 +589,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
     public boolean onTouch(View v, MotionEvent event)
     {
         int id = v.getId();
-        if (id == R.id.buttonHome)
+        if (id == R.id.buttonHome || id == R.id.buttonHomeM)
         {
             if(event.getAction() == MotionEvent.ACTION_DOWN)
             {
@@ -585,7 +604,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
             }
 
         }
-        if (id == R.id.buttonMenu)
+        if (id == R.id.buttonMenu || id == R.id.buttonMenuM)
         {
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
                 outAnimation = new AlphaAnimation(1f, .1f);
@@ -596,7 +615,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                 v.setAlpha(1f);
             }
         }
-        if (id == R.id.buttonBack)
+        if (id == R.id.buttonBack || id == R.id.buttonBackM)
         {
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
                 outAnimation = new AlphaAnimation(1f, .1f);
@@ -626,7 +645,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
     public boolean onLongClick(View view) {
         int id = view.getId();
 
-        if (id == R.id.buttonMenu) {
+        if (id == R.id.buttonMenu || id == R.id.buttonMenuM) {
             AlertDialog.Builder builder = new AlertDialog.Builder(FullscreenActivity.this, R.style.MyCustomDialogTheme);
 
             builder.setTitle(getResources().getString(R.string.hint_password));
@@ -754,6 +773,9 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                 }*/
                 if (!Utilidades.esTablet(getApplicationContext())) {
                     mlinearBotones.setVisibility(View.GONE);
+                    if(!Utilidades.tieneBotonesFisicos(getApplicationContext())){
+                        mlinearBotonesM.setVisibility(View.VISIBLE);
+                    }
                     mTextHotel.setVisibility(View.VISIBLE);
                     mTextHotelT.setVisibility(View.VISIBLE);
                 } else {

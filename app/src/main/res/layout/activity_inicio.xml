@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:background="#e55427"
     android:id="@+id/activity_inicio"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:weightSum="3"
+    android:orientation="vertical"
     tools:context="es.tfandroid.roombarlauncher.InicioActivity">
-
+<LinearLayout
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_weight="3">
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -24,4 +30,44 @@
         android:background="@color/colorPrimary"
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true" />
-</RelativeLayout>
+</LinearLayout>
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:id="@+id/linearBotonesMovil"
+        android:weightSum="3"
+        android:visibility="visible"
+        android:layout_marginTop="3dp"
+        android:layout_marginBottom="3dp">
+
+        <ImageButton
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/buttonMenuM"
+            android:scaleType="fitCenter"
+            android:src="@drawable/buttonmenu"
+            android:adjustViewBounds="false"
+            android:layout_weight="1"
+            android:background="@android:color/transparent" />
+        <ImageButton
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/buttonHomeM"
+            android:scaleType="fitCenter"
+            android:src="@drawable/buttonhome"
+            android:adjustViewBounds="false"
+            android:layout_weight="1"
+            android:background="@android:color/transparent" />
+        <ImageButton
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/buttonBackM"
+            android:scaleType="fitCenter"
+            android:src="@drawable/buttonback"
+            android:adjustViewBounds="false"
+            android:baselineAlignBottom="false"
+            android:layout_weight="1"
+            android:background="@android:color/transparent" />
+    </LinearLayout>
+</LinearLayout>

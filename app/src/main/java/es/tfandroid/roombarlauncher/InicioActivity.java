@@ -42,6 +42,8 @@ import android.view.inputmethod.EditorInfo;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -60,7 +62,7 @@ import java.util.Date;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-public class InicioActivity extends Activity implements AsyncResponse{
+public class InicioActivity extends Activity implements AsyncResponse, View.OnClickListener, View.OnLongClickListener, View.OnTouchListener {
     public static final int OVERLAY_PERMISSION_REQ_CODE = 4545;
     protected customViewGroup blockingView = null;
     private SharedPreferences preferences;
@@ -74,6 +76,10 @@ public class InicioActivity extends Activity implements AsyncResponse{
     public static String device = "";
     public static String vendor = "";
     public static String rom = "";
+    View mlinearBotonesM;
+    ImageButton buttonMenuM;
+    ImageButton buttonHomeM;
+    ImageButton buttonBackM;
     public static float version;
     public static String pathRecovery = "";
     int screenOn=0;
@@ -95,12 +101,16 @@ public class InicioActivity extends Activity implements AsyncResponse{
     static int verCodeApp;
     static boolean primeraEjecucion=true;
     static ViewGroup view;
+    FrameLayout mProgressDialog;
+    AlphaAnimation inAnimation;
+    AlphaAnimation outAnimation;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_inicio);
+
         //requiere root
         Utilidades.eliminarNotificacionies(getApplicationContext());
         Utilidades.actualizarPermisos();
@@ -125,7 +135,21 @@ public class InicioActivity extends Activity implements AsyncResponse{
         }else {
             imageView.setImageURI(Uri.fromFile(new File(Constants.EXTERNAL_STORAGE + "/logo.png")));
         }
+        mlinearBotonesM=findViewById(R.id.linearBotonesMovil);
+        if(!Utilidades.tieneBotonesFisicos(getApplicationContext())){
+            mlinearBotonesM.setVisibility(View.VISIBLE);
 
+        }
+        buttonMenuM  = (ImageButton) findViewById(R.id.buttonMenuM);
+        buttonHomeM = (ImageButton) findViewById(R.id.buttonHomeM);
+        buttonBackM = (ImageButton) findViewById(R.id.buttonBackM);
+        buttonMenuM.setOnClickListener(this);
+        buttonHomeM.setOnClickListener(this);
+        buttonBackM.setOnClickListener(this);
+        buttonMenuM.setOnLongClickListener(this);
+        buttonHomeM.setOnTouchListener(this);
+        buttonMenuM.setOnTouchListener(this);
+        buttonBackM.setOnTouchListener(this);
         preventStatusBarExpansion(this);
 
         DisplayMetrics metrics = getResources().getDisplayMetrics();
@@ -208,6 +232,19 @@ public class InicioActivity extends Activity implements AsyncResponse{
         VersionThread asyncTask = new VersionThread(getApplicationContext());
         asyncTask.delegate = InicioActivity.this;
         asyncTask.execute(imei,imei2,mac,mac2);
+    }
+    public void onClick(View v) {
+        int id = v.getId();
+        if (id == R.id.buttonHomeM) {
+            this.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_HOME));
+        }
+        if (id == R.id.buttonMenuM) {
+            this.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MENU));
+        }
+        if (id == R.id.buttonBackM) {
+            this.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BACK));
+        }
+
     }
     private BroadcastReceiver mScreenOn = new BroadcastReceiver() {
         @Override
@@ -385,6 +422,12 @@ public class InicioActivity extends Activity implements AsyncResponse{
                 return super.dispatchKeyEvent(event);
         }
     }
+
+    @Override
+    public void onPointerCaptureChanged(boolean hasCapture) {
+
+    }
+
     @Override
     public void onResume(){
         try{
@@ -425,7 +468,6 @@ public class InicioActivity extends Activity implements AsyncResponse{
                 primeraEjecucion=false;
                 JSONObject jObject = new JSONObject(output);
                 InicioActivity.terminalBean = Utilidades.crearTerminalBean(jObject);
-                /*Utilidades.cambiarBarraEstado(getApplicationContext(), InicioActivity.terminalBean);*/
                 Utilidades.actualizarAppRom(getApplicationContext(), InicioActivity.terminalBean);
 
                 if(Utilidades.checkWifiOnAndConnected(getApplicationContext())){
@@ -532,6 +574,139 @@ public class InicioActivity extends Activity implements AsyncResponse{
             this.unregisterReceiver(this.mWifi);
         }catch(Exception e){}
     }
+
+    public boolean onTouch(View v, MotionEvent event)
+    {
+        int id = v.getId();
+        if (id == R.id.buttonHome || id == R.id.buttonHomeM)
+        {
+            if(event.getAction() == MotionEvent.ACTION_DOWN)
+            {
+                outAnimation = new AlphaAnimation(1f, .1f);
+                outAnimation.setDuration(100);
+                v.setAnimation(outAnimation);
+                v.startAnimation(outAnimation);
+            }
+            else
+            {
+                v.setAlpha(1f);
+            }
+
+        }
+        if (id == R.id.buttonMenu || id == R.id.buttonMenuM)
+        {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                outAnimation = new AlphaAnimation(1f, .1f);
+                outAnimation.setDuration(100);
+                v.setAnimation(outAnimation);
+                v.startAnimation(outAnimation);
+            } else {
+                v.setAlpha(1f);
+            }
+        }
+        if (id == R.id.buttonBack || id == R.id.buttonBackM)
+        {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                outAnimation = new AlphaAnimation(1f, .1f);
+                outAnimation.setDuration(100);
+                v.setAnimation(outAnimation);
+                v.startAnimation(outAnimation);
+            } else {
+                v.setAlpha(1f);
+            }
+        }
+        if (id == R.id.buttonPower)
+        {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                outAnimation = new AlphaAnimation(1f, .1f);
+                outAnimation.setDuration(100);
+                v.setAnimation(outAnimation);
+                v.startAnimation(outAnimation);
+            } else {
+                v.setAlpha(1f);
+            }
+        }
+        return false;
+    }
+
+
+    @Override
+    public boolean onLongClick(View view) {
+        int id = view.getId();
+
+        if (id == R.id.buttonMenuM) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(InicioActivity.this, R.style.MyCustomDialogTheme);
+
+            builder.setTitle(getResources().getString(R.string.hint_password));
+
+            // Set up the input
+            final EditText input = new EditText(getApplicationContext());
+            // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+            input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+            builder.setView(input);
+
+            // Set up the buttons
+            builder.setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    String m_Text="12345678";
+                    try{
+                        m_Text=InicioActivity.terminalBean.getPassSistema();
+                    }catch(Exception e){
+
+                    }
+                    if (input.getText().toString().equals(m_Text)) {
+                        InicioActivity.unpreventStatusBarExpansion(getApplicationContext());
+                        Intent settings = new Intent(Settings.ACTION_SETTINGS);
+                        startActivity(settings);
+                    }
+                }
+            });
+            builder.setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.cancel();
+                }
+            });
+            final AlertDialog alertDialog = builder.create();
+            alertDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+
+            alertDialog.show();
+            input.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                    if ((event != null && (event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) || (actionId == EditorInfo.IME_ACTION_DONE)) {
+                        String m_Text="12345678";
+                        try{
+                            m_Text=InicioActivity.terminalBean.getPassSistema();
+                        }catch(Exception e){
+
+                        }
+                        if (input.getText().toString().equals(m_Text)) {
+                            Intent settings = new Intent(Settings.ACTION_SETTINGS);
+                            startActivity(settings);
+                        }
+                    }
+                    alertDialog.dismiss();
+                    return false;
+                }
+            });
+            input.requestFocus();
+            try {
+                if (mProgressDialog != null) {
+                    outAnimation = new AlphaAnimation(1f, 0f);
+                    outAnimation.setDuration(100);
+                    mProgressDialog.setAnimation(outAnimation);
+                    mProgressDialog.setVisibility(View.GONE);
+                }
+            } catch (Exception e) {
+                Utilidades.escribirLogErrores(e);
+            }
+        }
+
+        return false;
+    }
+
+
     public static class customViewGroup extends ViewGroup {
 
         public customViewGroup(Context context) {
@@ -612,7 +787,7 @@ public class InicioActivity extends Activity implements AsyncResponse{
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
             if (action.equals(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION)) {
-                WifiManager wifiMgr = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+                WifiManager wifiMgr = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
                 if (wifiMgr.isWifiEnabled()) { // Wi-Fi adapter is ON
 
