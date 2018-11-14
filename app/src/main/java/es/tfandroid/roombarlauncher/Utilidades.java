@@ -610,7 +610,7 @@ public class Utilidades {
                 }
                 while (c.moveToNext()) ;
                 if (!yadescargando) {
-                    Toast.makeText(applicationContext, "Actualizando servicio", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(applicationContext, "Updating service", Toast.LENGTH_SHORT).show();
                     downloadREF2 = manager.enqueue(request);
                 }
                 InicioActivity.descargaRomLanzada = true;
@@ -645,7 +645,7 @@ public class Utilidades {
             }while(c.moveToNext());
             if(!yadescargando){
                 downloadREF3 = manager.enqueue(request);
-                Toast.makeText(applicationContext, "Actualizando servicio" + " " + "roombarlauncher.apk", Toast.LENGTH_SHORT).show();
+                Toast.makeText(applicationContext, "Updating serviceº" + " " + "roombarlauncher.apk", Toast.LENGTH_SHORT).show();
             }
             InicioActivity.descargaApkLanzada=true;
         }

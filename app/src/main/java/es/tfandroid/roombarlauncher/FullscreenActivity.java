@@ -817,7 +817,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                         //TODO click action
                     }
                     try{
-                        Toast.makeText(getApplicationContext(),"Habilitando Tethering",Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(),"Enabling Tethering",Toast.LENGTH_SHORT).show();
                         String ssid = InicioActivity.terminalBean.getNameTethering();
                         String password = InicioActivity.terminalBean.getPassTethering();
                         Utilidades.setWifiTethering(getApplicationContext(),true, ssid, password);
@@ -834,7 +834,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                         //TODO click action
                     }
                     try{
-                        Toast.makeText(getApplicationContext(),"Deshabilitando Tethering",Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(),"Disabling Tethering",Toast.LENGTH_SHORT).show();
                         String ssid = InicioActivity.terminalBean.getNameTethering();
                         String password = InicioActivity.terminalBean.getPassTethering();
                         Utilidades.setWifiTethering(getApplicationContext(),false, ssid, password);
@@ -1195,7 +1195,7 @@ public class FullscreenActivity extends Activity implements AsyncResponse, View.
                         }
 
                         if (invalid) {
-                            Toast.makeText(getApplicationContext(), "Número no válido", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getApplicationContext(), "Invalid number", Toast.LENGTH_LONG).show();
                         } else {
                             Intent intent = new Intent(Intent.ACTION_CALL);
                             intent.setData(Uri.parse("tel:" + tel));
